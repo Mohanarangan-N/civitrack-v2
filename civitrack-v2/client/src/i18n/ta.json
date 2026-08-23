@@ -1,0 +1,16 @@
+{
+  "app": "சிவிட்ராக்", "tagline": "நகர முடிவு ஆதரவு அமைப்பு",
+  "feed": "செய்திகள்", "map": "வரைபடம்", "report": "சிக்கலை புகாரளி", "profile": "சுயவிவரம்",
+  "leaderboard": "தரவரிசை", "analytics": "பகுப்பாய்வு", "notifications": "அறிவிப்புகள்",
+  "login": "உள்நுழை", "register": "பதிவு", "logout": "வெளியேறு",
+  "submit": "சமர்ப்பி", "cancel": "ரத்து", "approve": "அங்கீகரி", "reject": "நிராகரி",
+  "anonymous": "அநாமதேய", "public": "பொது",
+  "critical": "நெருக்கடி", "high": "அதிகம்", "medium": "நடுத்தரம்", "low": "குறைவு",
+  "resolved": "தீர்க்கப்பட்டது", "in_progress": "செயலில்", "open": "திறந்தது",
+  "pending": "சரிபார்ப்பு நிலுவை", "verified": "சரிபார்க்கப்பட்டது",
+  "ecoscore": "சுற்றுச்சூழல் மதிப்பெண்", "ward": "வார்டு", "category": "வகை", "priority": "முன்னுரிமை",
+  "like": "விரும்பு", "comment": "கருத்து", "share": "பகிர்", "save": "சேமி",
+  "total_issues": "மொத்த சிக்கல்கள்", "open_issues": "திறந்த சிக்கல்கள்",
+  "critical_issues": "நெருக்கடி சிக்கல்கள்", "resolved_issues": "தீர்க்கப்பட்ட சிக்கல்கள்",
+  "demo_accounts": "டெமோ: citizen@demo.com / ngo@demo.com (கடவுச்சொல்: password123)"
+}
