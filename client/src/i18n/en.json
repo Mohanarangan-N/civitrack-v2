@@ -1,0 +1,79 @@
+{
+  "app": {
+    "name": "CiviTrack V2",
+    "tagline": "Urban Decision Support System"
+  },
+  "nav": {
+    "feed": "Feed",
+    "map": "Map",
+    "report": "Report Issue",
+    "profile": "Profile",
+    "leaderboard": "Leaderboard",
+    "notifications": "Notifications",
+    "dashboard": "Dashboard",
+    "login": "Sign In",
+    "register": "Register",
+    "logout": "Sign Out"
+  },
+  "feed": {
+    "title": "Community Feed",
+    "stories": "Ward Stories",
+    "noIssues": "No issues found",
+    "loadMore": "Load More"
+  },
+  "report": {
+    "title": "Report a Civic Issue",
+    "step1": "Select Category",
+    "step2": "Describe the Issue",
+    "step3": "Pin Location",
+    "step4": "Upload Photos",
+    "step5": "Privacy Settings",
+    "submit": "Submit Report",
+    "anonymous": "Report Anonymously",
+    "public": "Report Publicly"
+  },
+  "status": {
+    "PENDING_VERIFICATION": "Pending Review",
+    "VERIFIED": "Verified",
+    "IN_PROGRESS": "In Progress",
+    "RESOLVED": "Resolved",
+    "REJECTED": "Rejected"
+  },
+  "priority": {
+    "LOW": "Low Priority",
+    "MEDIUM": "Medium Priority",
+    "HIGH": "High Priority",
+    "CRITICAL": "Critical"
+  },
+  "category": {
+    "ROADS": "Roads & Infrastructure",
+    "WATER": "Water & Drainage",
+    "WASTE": "Waste Management",
+    "LIGHTING": "Street Lighting",
+    "AIR_QUALITY": "Air Quality",
+    "PARKS": "Parks & Gardens",
+    "PUBLIC_PROPERTY": "Public Property",
+    "OTHER": "Other"
+  },
+  "ecoscore": {
+    "title": "EcoScore",
+    "level": "Level",
+    "points": "Points",
+    "badges": "Badges"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "like": "Like",
+    "comment": "Comment",
+    "share": "Share",
+    "bookmark": "Bookmark",
+    "verified": "Verified",
+    "anonymous": "Anonymous"
+  }
+}

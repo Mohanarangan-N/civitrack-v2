@@ -1,0 +1,79 @@
+{
+  "app": {
+    "name": "CiviTrack V2",
+    "tagline": "Système d'Aide à la Décision Urbaine"
+  },
+  "nav": {
+    "feed": "Flux",
+    "map": "Carte",
+    "report": "Signaler un problème",
+    "profile": "Profil",
+    "leaderboard": "Classement",
+    "notifications": "Notifications",
+    "dashboard": "Tableau de bord",
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "logout": "Déconnexion"
+  },
+  "feed": {
+    "title": "Flux Communautaire",
+    "stories": "Stories du Quartier",
+    "noIssues": "Aucun problème trouvé",
+    "loadMore": "Charger Plus"
+  },
+  "report": {
+    "title": "Signaler un Problème Civique",
+    "step1": "Sélectionner la Catégorie",
+    "step2": "Décrire le Problème",
+    "step3": "Localiser sur la Carte",
+    "step4": "Télécharger des Photos",
+    "step5": "Paramètres de Confidentialité",
+    "submit": "Soumettre le Rapport",
+    "anonymous": "Signaler Anonymement",
+    "public": "Signaler Publiquement"
+  },
+  "status": {
+    "PENDING_VERIFICATION": "En Attente de Vérification",
+    "VERIFIED": "Vérifié",
+    "IN_PROGRESS": "En Cours",
+    "RESOLVED": "Résolu",
+    "REJECTED": "Rejeté"
+  },
+  "priority": {
+    "LOW": "Priorité Basse",
+    "MEDIUM": "Priorité Moyenne",
+    "HIGH": "Priorité Haute",
+    "CRITICAL": "Critique"
+  },
+  "category": {
+    "ROADS": "Routes & Infrastructure",
+    "WATER": "Eau & Drainage",
+    "WASTE": "Gestion des Déchets",
+    "LIGHTING": "Éclairage Public",
+    "AIR_QUALITY": "Qualité de l'Air",
+    "PARKS": "Parcs & Jardins",
+    "PUBLIC_PROPERTY": "Propriété Publique",
+    "OTHER": "Autre"
+  },
+  "ecoscore": {
+    "title": "EcoScore",
+    "level": "Niveau",
+    "points": "Points",
+    "badges": "Badges"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "retry": "Réessayer",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "like": "J'aime",
+    "comment": "Commenter",
+    "share": "Partager",
+    "bookmark": "Enregistrer",
+    "verified": "Vérifié",
+    "anonymous": "Anonyme"
+  }
+}
