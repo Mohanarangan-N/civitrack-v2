@@ -15,7 +15,9 @@ export function useSocket() {
     if (!isAuthenticated || initialized.current) return;
     initialized.current = true;
 
-    socket = io('/', {
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, '') || '/';
+
+    socket = io(socketUrl, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
     });
