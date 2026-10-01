@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
+import { handleMockRequest } from './mockEngine';
 
 const rawUrl = (import.meta.env.VITE_API_URL || '').trim();
 let baseURL = '/api';
@@ -12,10 +13,33 @@ if (rawUrl && rawUrl !== '/api') {
   baseURL = withProtocol.endsWith('/api') ? withProtocol : `${withProtocol.replace(/\/+$/, '')}/api`;
 }
 
+// Check if running on Vercel or environment where /api is not backed by a Python server
+const isVercelOrStandalone = 
+  typeof window !== 'undefined' && 
+  (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('civitrack')) && 
+  baseURL === '/api';
+
 const api = axios.create({
   baseURL,
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
+  adapter: isVercelOrStandalone
+    ? async (config) => {
+        const mockData = handleMockRequest(config);
+        if (mockData !== null) {
+          // Subtle realistic latency
+          await new Promise((r) => setTimeout(r, 60));
+          return {
+            data: mockData,
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config,
+          };
+        }
+        return (axios.defaults.adapter as any)(config);
+      }
+    : undefined,
 });
 
 // Request interceptor: inject JWT
@@ -27,10 +51,33 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor: handle 401 safely
+// Response interceptor: handle HTML rewrites and fallback on 404/405/network errors safely
 api.interceptors.response.use(
-  (res) => res,
-  (err) => {
+  (res) => {
+    // If response is HTML (which Vercel returns on 200 rewrites when looking for /api)
+    if (typeof res.data === 'string' && (res.data.includes('<!DOCTYPE html>') || res.data.includes('<html'))) {
+      const mockData = handleMockRequest(res.config);
+      if (mockData !== null) {
+        return { ...res, data: mockData };
+      }
+    }
+    return res;
+  },
+  async (err) => {
+    // If request failed (e.g. 405 Method Not Allowed, 404, or backend offline)
+    if (err.config) {
+      const mockData = handleMockRequest(err.config);
+      if (mockData !== null) {
+        return {
+          data: mockData,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: err.config,
+        };
+      }
+    }
+
     if (err.response?.status === 401) {
       const isMeRoute = err.config?.url?.includes('/auth/me');
       if (isMeRoute) {

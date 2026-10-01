@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { issuesAPI, mlAPI } from '@/api';
 import { CATEGORY_CONFIG, WARDS, PUDUCHERRY_CENTER } from '@/utils/constants';
 import type { IssueCategory } from '@/types';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import {
   Sparkles, MapPin, Camera, Lock, CheckCircle2, ArrowLeft, ArrowRight,
@@ -14,6 +14,13 @@ import { CameraCaptureModal } from '@/components/common/CameraCaptureModal';
 import toast from 'react-hot-toast';
 
 function LocationMarker({ position, setPosition }: { position: [number, number]; setPosition: (p: [number, number]) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+    const t = setTimeout(() => map.invalidateSize(), 200);
+    return () => clearTimeout(t);
+  }, [map]);
+
   useMapEvents({
     click(e) {
       setPosition([e.latlng.lat, e.latlng.lng]);
@@ -575,9 +582,13 @@ export const ReportIssuePage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="h-44 rounded-2xl overflow-hidden border border-primary/30 relative">
-                  <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
-                    <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                <div className="h-44 rounded-2xl overflow-hidden border border-primary/30 relative bg-[#e5e3df]">
+                  <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%', background: '#e5e3df' }}>
+                    <TileLayer
+                      url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution="&copy; OpenStreetMap contributors"
+                      maxZoom={19}
+                    />
                     <LocationMarker position={position} setPosition={setPosition} />
                   </MapContainer>
                 </div>

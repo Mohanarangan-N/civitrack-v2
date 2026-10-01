@@ -71,12 +71,29 @@ function healthScoreColor(score: number): string {
   return '#E85038'; // red
 }
 
-// Component to handle map center updates with smooth fly animation
 function FlyToView({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap();
   useEffect(() => {
     map.flyTo(center, zoom, { duration: 1.2 });
   }, [center, zoom, map]);
+  return null;
+}
+
+// Invalidate size immediately so map never renders black/blank tiles
+function MapResizeFixer() {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+    const t1 = setTimeout(() => map.invalidateSize(), 150);
+    const t2 = setTimeout(() => map.invalidateSize(), 500);
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
   return null;
 }
 
@@ -182,31 +199,31 @@ export const PuducherryMap: React.FC<PuducherryMapProps> = ({
     }
   };
 
-  const [tileProvider, setTileProvider] = React.useState<'carto' | 'osm' | 'voyager'>('carto');
+  const [tileProvider, setTileProvider] = React.useState<'osm' | 'streets' | 'satellite'>('osm');
 
   const tileConfigs = {
-    carto: {
-      label: 'Dark GIS',
-      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-    },
     osm: {
       label: 'OpenStreetMap',
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       attribution: '&copy; OpenStreetMap contributors',
     },
-    voyager: {
-      label: 'Light GIS',
-      url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    streets: {
+      label: 'Esri Streets',
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+      attribution: '&copy; Esri &mdash; Puducherry GIS',
+    },
+    satellite: {
+      label: 'Satellite',
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      attribution: '&copy; Esri &mdash; Satellite View',
     },
   };
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-primary/30 shadow-2xl">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-primary/30 shadow-2xl bg-[#e5e3df]">
       {/* Floating Tile Switcher */}
       <div className="absolute top-3 right-3 z-[1000] flex bg-bg-surface/90 backdrop-blur-md rounded-xl p-1 border border-primary/30 shadow-lg text-xs gap-1">
-        {(['carto', 'osm', 'voyager'] as const).map((mode) => (
+        {(['osm', 'streets', 'satellite'] as const).map((mode) => (
           <button
             key={mode}
             type="button"
@@ -226,8 +243,9 @@ export const PuducherryMap: React.FC<PuducherryMapProps> = ({
         center={PUDUCHERRY_CENTER}
         zoom={PUDUCHERRY_ZOOM}
         scrollWheelZoom={true}
-        style={{ width: '100%', height: '100%', minHeight: '450px' }}
+        style={{ width: '100%', height: '100%', minHeight: '450px', background: '#e5e3df' }}
       >
+        <MapResizeFixer />
         <FlyToView center={mapCenter} zoom={mapZoom} />
 
         {/* Selected Tile Layer with dynamic URL */}
@@ -235,6 +253,7 @@ export const PuducherryMap: React.FC<PuducherryMapProps> = ({
           key={tileProvider}
           attribution={tileConfigs[tileProvider].attribution}
           url={tileConfigs[tileProvider].url}
+          maxZoom={19}
         />
 
         {/* Ward Boundary GeoJSON Polygons with health-score coloring */}
