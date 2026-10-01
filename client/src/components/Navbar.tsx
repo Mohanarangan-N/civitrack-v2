@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
 import { 
   Shield, MapPin, Bell, User as UserIcon, LogOut, 
-  PlusCircle, LayoutDashboard, Award, Globe, Search
+  PlusCircle, LayoutDashboard, Award, Globe, Search, Sparkles
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -60,6 +60,10 @@ export const Navbar: React.FC = () => {
           <Link to="/track" className={`nav-link ${location.pathname === '/track' ? 'active' : ''}`}>
             <Search size={16} />
             Track Anonymous
+          </Link>
+          <Link to="/ai" className={`nav-link text-accent hover:text-accent-hover font-semibold flex items-center gap-1.5 ${location.pathname === '/ai' ? 'active' : ''}`}>
+            <Sparkles size={16} className="text-accent animate-pulse" />
+            AI Engine
           </Link>
 
           {user?.role === 'NGO' && (

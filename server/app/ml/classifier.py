@@ -3,7 +3,8 @@ import joblib
 import numpy as np
 from pathlib import Path
 
-MODEL_PATH = Path(__file__).parent.parent.parent.parent / "ml" / "models" / "classifier.pkl"
+MODEL_PATH = Path(__file__).parent / "models" / "classifier.pkl"
+ALT_MODEL_PATH = Path(__file__).parent.parent.parent.parent / "ml" / "models" / "classifier.pkl"
 
 _model = None
 _vectorizer = None
@@ -22,24 +23,27 @@ KEYWORDS = {
 
 def load_or_train():
     global _model, _vectorizer
-    if MODEL_PATH.exists():
-        bundle = joblib.load(MODEL_PATH)
+    target_path = MODEL_PATH if MODEL_PATH.exists() else ALT_MODEL_PATH
+    if target_path.exists():
+        bundle = joblib.load(target_path)
         _model = bundle["model"]
         _vectorizer = bundle["vectorizer"]
-        print("Loaded text classifier from disk.")
+        print(f"Loaded text classifier from disk ({target_path}).")
         return
 
     print("Training text classifier...")
-    from sklearn.pipeline import Pipeline
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.ensemble import RandomForestClassifier
-
-    # Generate training data
     import sys
-    root_dir = str(MODEL_PATH.parent.parent.parent)
-    if root_dir not in sys.path:
-        sys.path.insert(0, root_dir)
-    from ml.generate_data import generate_text_data
+
+    try:
+        from ml_src.generate_data import generate_text_data
+    except ImportError:
+        root_dir = str(ALT_MODEL_PATH.parent.parent.parent)
+        if root_dir not in sys.path:
+            sys.path.insert(0, root_dir)
+        from ml.generate_data import generate_text_data
+
     texts, labels = generate_text_data()
 
     vectorizer = TfidfVectorizer(max_features=5000, ngram_range=(1, 2))
@@ -60,7 +64,7 @@ def predict(text: str) -> dict:
 
     try:
         X = _vectorizer.transform([text.lower()])
-        pred = _model.predict(X)[0]
+        pred = str(_model.predict(X)[0])
         proba = _model.predict_proba(X)[0]
         confidence = round(float(max(proba)), 3)
         return {"category": pred, "confidence": confidence}

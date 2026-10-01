@@ -6,6 +6,7 @@ from typing import Optional
 from app.models.issue import IssueCreate, IssueVerify, IssueStatusUpdate, CommentCreate
 from app.utils.database import get_db
 from app.utils.helpers import now_utc, serialize_doc
+from app.utils.developer_logger import log_event
 from app.middleware.auth import get_current_user, get_optional_user, require_ngo, require_authority, require_citizen
 from app.services.ecoscore import award_points
 from app.services.notification import create_notification, emit_to_ward, emit_to_issue
@@ -24,7 +25,17 @@ async def get_issues(
     current_user=Depends(get_optional_user),
 ):
     db = get_db()
-    query = {"status": {"$in": ["VERIFIED", "IN_PROGRESS", "RESOLVED"]}}
+    base_filter = {"$in": ["VERIFIED", "IN_PROGRESS", "RESOLVED"]}
+    if current_user:
+        user_id = current_user["_id"]
+        query = {
+            "$or": [
+                {"status": base_filter},
+                {"reporter_id": user_id, "status": "PENDING_VERIFICATION"}
+            ]
+        }
+    else:
+        query = {"status": base_filter}
     if category:
         query["category"] = category
     if priority:
@@ -60,6 +71,32 @@ async def submit_issue(body: IssueCreate, current_user=Depends(get_current_user)
         tracking_token = generate_tracking_token()
         token_hash = hash_token(tracking_token)
 
+    # AI Intelligent Auto-Inference for area and hecticity if standard defaults
+    text_corpus = f"{body.title} {body.description}".lower()
+    inferred_area = body.area_type.value
+    inferred_hectic = body.hectic_level.value
+
+    if "highway" in text_corpus or "national highway" in text_corpus or "bypass" in text_corpus:
+        inferred_area = "HIGHWAY"
+    elif "school" in text_corpus or "hospital" in text_corpus or "college" in text_corpus or "clinic" in text_corpus:
+        inferred_area = "SCHOOL_HOSPITAL"
+    elif "market" in text_corpus or "bazaar" in text_corpus or "shop" in text_corpus or "commercial" in text_corpus:
+        inferred_area = "COMMERCIAL"
+
+    if "emergency" in text_corpus or "accident" in text_corpus or "severe" in text_corpus or "danger" in text_corpus:
+        inferred_hectic = "EXTREMELY_BUSY"
+    elif "busy" in text_corpus or "heavy traffic" in text_corpus or "daily" in text_corpus:
+        inferred_hectic = "BUSY"
+
+    # Synchronous AI Vision pre-validation if attachment exists
+    from app.ml.vision_validator import analyze_image_evidence
+    ai_vision = None
+    if body.attachments and len(body.attachments) > 0:
+        try:
+            ai_vision = analyze_image_evidence(body.attachments[0], body.category.value, body.title, body.description)
+        except Exception:
+            ai_vision = None
+
     doc = {
         "title": body.title,
         "description": body.description,
@@ -69,15 +106,17 @@ async def submit_issue(body: IssueCreate, current_user=Depends(get_current_user)
         "priority_score": 50,
         "location": {"type": "Point", "coordinates": [body.longitude, body.latitude]},
         "ward": body.ward,
-        "area_type": body.area_type.value,
-        "hectic_level": body.hectic_level.value,
+        "area_type": inferred_area,
+        "hectic_level": inferred_hectic,
         "reporter_id": None if body.is_anonymous else user_id,
+        "reporter_name": "Anonymous Citizen 🎭" if body.is_anonymous else current_user.get("name", "Citizen Reporter"),
         "is_anonymous": body.is_anonymous,
         "anonymous_token_hash": token_hash,
-        "ai_category": None,
+        "ai_category": body.category.value,
         "ai_confidence": None,
         "ai_classified_at": None,
-        "attachments": [],
+        "ai_vision_analysis": ai_vision,
+        "attachments": body.attachments or [],
         "status_history": [{
             "status": "PENDING_VERIFICATION",
             "changed_at": now_utc(),
@@ -93,8 +132,16 @@ async def submit_issue(body: IssueCreate, current_user=Depends(get_current_user)
         "updated_at": now_utc(),
     }
 
+    import time as _time
+    _t0 = _time.time()
     result = await db.issues.insert_one(doc)
     issue_id = str(result.inserted_id)
+    _dur = (_time.time() - _t0) * 1000
+    log_event("submit_issue", _dur, "SUCCESS", {
+        "issue_id": issue_id, "category": body.category.value,
+        "ward": body.ward, "anonymous": body.is_anonymous,
+        "vision_flag": ai_vision.get("flag") if ai_vision else None,
+    })
 
     # Award points (not for anonymous)
     if not body.is_anonymous:
@@ -110,23 +157,37 @@ async def submit_issue(body: IssueCreate, current_user=Depends(get_current_user)
 
     # Async ML classification
     asyncio.create_task(_classify_issue_async(issue_id, body.title, body.description,
-                                               body.area_type.value, body.hectic_level.value))
+                                               inferred_area, inferred_hectic, body.attachments))
 
-    response = {"id": issue_id, "status": "PENDING_VERIFICATION"}
+    response = {"id": issue_id, "status": "PENDING_VERIFICATION", "ai_vision": ai_vision}
     if tracking_token:
         response["tracking_token"] = tracking_token
         response["tracking_message"] = "Save this code! It's the ONLY way to track your anonymous report."
     return response
 
 
-async def _classify_issue_async(issue_id: str, title: str, description: str, area_type: str, hectic_level: str):
+async def _classify_issue_async(issue_id: str, title: str, description: str, area_type: str, hectic_level: str, attachments: list = None):
     """Async ML classification runs after response is sent."""
-    await asyncio.sleep(2)  # Simulate processing delay
+    import time as _time
+    await asyncio.sleep(1)
+    _t0 = _time.time()
     try:
         from app.ml import classifier, priority
+        from app.ml.vision_validator import analyze_image_evidence
         text = f"{title} {description}"
         cat_result = classifier.predict(text)
-        priority_result = priority.compute_score(area_type, hectic_level)
+        
+        # Image severity adjustment from vision
+        hazard_score = 0.5
+        vision_result = None
+        if attachments and len(attachments) > 0:
+            vision_result = analyze_image_evidence(attachments[0], cat_result["category"], title, description)
+            if not vision_result.get("valid", True):
+                hazard_score = 0.2
+            else:
+                hazard_score = vision_result.get("evidence_score", 0.7)
+
+        priority_result = priority.compute_score(area_type, hectic_level, hazard_score)
 
         priority_label = (
             "LOW" if priority_result <= 25 else
@@ -144,10 +205,22 @@ async def _classify_issue_async(issue_id: str, title: str, description: str, are
                 "ai_classified_at": now_utc(),
                 "priority": priority_label,
                 "priority_score": priority_result,
+                "ai_vision_analysis": vision_result,
                 "updated_at": now_utc(),
             }}
         )
+        _dur = (_time.time() - _t0) * 1000
+        log_event("ml_classify_async", _dur, "SUCCESS", {
+            "issue_id": issue_id,
+            "ai_category": cat_result["category"],
+            "ai_confidence": cat_result["confidence"],
+            "priority": priority_label,
+            "priority_score": priority_result,
+            "vision_scene": vision_result.get("scene_detected") if vision_result else None
+        })
     except Exception as e:
+        _dur = (_time.time() - _t0) * 1000
+        log_event("ml_classify_async", _dur, "ERROR", {"issue_id": issue_id, "error": str(e)})
         print(f"ML classification error for {issue_id}: {e}")
 
 

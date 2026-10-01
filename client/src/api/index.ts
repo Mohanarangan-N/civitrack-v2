@@ -55,6 +55,7 @@ export const analyticsAPI = {
   getCategory: () => api.get('/analytics/category').then((r) => r.data),
   getWards: () => api.get('/analytics/wards').then((r) => r.data),
   getSLA: () => api.get('/analytics/sla').then((r) => r.data),
+  getPreventativeInsights: () => api.get('/analytics/preventative-insights').then((r) => r.data),
 };
 
 export const ngoAPI = {
@@ -91,6 +92,9 @@ export const wardsAPI = {
 export const mlAPI = {
   classifyText: (text: string) =>
     api.post('/ml/classify-text', { text }).then((r) => r.data),
+
+  validateImage: (data: { image: string; category: string; title?: string; description?: string }) =>
+    api.post('/ml/validate-image', data),
 
   priorityScore: (area_type: string, hectic_level: string, image_severity = 0.5) =>
     api.post('/ml/priority-score', { area_type, hectic_level, image_severity }).then((r) => r.data),

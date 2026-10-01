@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends
 from app.utils.database import get_db
-from app.middleware.auth import require_authority, get_current_user
+from app.middleware.auth import get_optional_user
+from app.ml import prevention_engine
 from datetime import datetime, timedelta, timezone
 
 router = APIRouter()
 
 
 @router.get("/summary")
-async def get_summary(current_user=Depends(get_current_user)):
+async def get_summary(current_user=Depends(get_optional_user)):
     db = get_db()
     total = await db.issues.count_documents({})
     pending = await db.issues.count_documents({"status": "PENDING_VERIFICATION"})
@@ -41,7 +42,7 @@ async def get_summary(current_user=Depends(get_current_user)):
 
 
 @router.get("/monthly")
-async def get_monthly(current_user=Depends(get_current_user)):
+async def get_monthly(current_user=Depends(get_optional_user)):
     db = get_db()
     pipeline = [
         {"$group": {
@@ -69,7 +70,7 @@ async def get_monthly(current_user=Depends(get_current_user)):
 
 
 @router.get("/category")
-async def get_by_category(current_user=Depends(get_current_user)):
+async def get_by_category(current_user=Depends(get_optional_user)):
     db = get_db()
     pipeline = [
         {"$group": {"_id": "$category", "count": {"$sum": 1}}},
@@ -80,7 +81,7 @@ async def get_by_category(current_user=Depends(get_current_user)):
 
 
 @router.get("/wards")
-async def get_ward_analytics(current_user=Depends(get_current_user)):
+async def get_ward_analytics(current_user=Depends(get_optional_user)):
     db = get_db()
     pipeline = [
         {"$group": {
@@ -105,7 +106,7 @@ async def get_ward_analytics(current_user=Depends(get_current_user)):
 
 
 @router.get("/sla")
-async def get_sla(current_user=Depends(require_authority)):
+async def get_sla(current_user=Depends(get_optional_user)):
     db = get_db()
     now = datetime.now(timezone.utc)
     pipeline = [
@@ -138,3 +139,19 @@ async def get_sla(current_user=Depends(require_authority)):
             r["resolved_at"] = r["resolved_at"].isoformat() if hasattr(r["resolved_at"], "isoformat") else str(r["resolved_at"])
 
     return results
+
+
+@router.get("/preventative-insights")
+async def get_preventative_insights(current_user=Depends(get_optional_user)):
+    """
+    Synthesizes AI root cause diagnosis and forward-looking preventative interventions
+    to systematically reduce issue occurrence across Puducherry wards.
+    """
+    db = get_db()
+    cursor = db.issues.find({}, {
+        "title": 1, "category": 1, "priority": 1, "ward": 1,
+        "status": 1, "created_at": 1, "area_type": 1, "location": 1
+    })
+    issues = await cursor.to_list(length=1000)
+    analysis = prevention_engine.analyze_issue_portfolio(issues)
+    return analysis

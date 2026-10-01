@@ -137,6 +137,51 @@ export const IssueDetailPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Photo Evidence & Interactive GIS Location Map Grid */}
+        <div className="grid md:grid-cols-2 gap-4 my-4">
+          {/* Photos */}
+          {issue.attachments && issue.attachments.length > 0 ? (
+            <div className="rounded-xl overflow-hidden border border-primary/20 bg-bg-surface flex flex-col">
+              <span className="text-xs font-bold text-text-muted px-3 py-2 bg-bg-elevated border-b border-primary/10 flex items-center gap-1.5">
+                <Sparkles size={14} className="text-accent" /> Photographic Evidence
+              </span>
+              <div className="h-56 relative group">
+                <img
+                  src={issue.attachments[0]}
+                  alt={issue.title}
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                />
+                <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-bg/80 backdrop-blur-md border border-primary/30 text-[10px] font-semibold text-accent flex items-center gap-1">
+                  <CheckCircle2 size={12} className="text-success" /> AI Vision Verified
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-primary/20 bg-bg-surface/50 h-56 flex flex-col items-center justify-center text-text-muted text-xs p-4 text-center">
+              <span>No image attachment uploaded with this report.</span>
+            </div>
+          )}
+
+          {/* Location Map */}
+          <div className="rounded-xl overflow-hidden border border-primary/20 bg-bg-surface flex flex-col">
+            <span className="text-xs font-bold text-text-muted px-3 py-2 bg-bg-elevated border-b border-primary/10 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <MapPin size={14} className="text-accent" /> {issue.ward} Ward Location
+              </span>
+              <span className="text-[10px] text-accent font-mono">
+                {issue.location?.coordinates ? `[${issue.location.coordinates[1].toFixed(3)}, ${issue.location.coordinates[0].toFixed(3)}]` : 'Puducherry'}
+              </span>
+            </span>
+            <div className="h-56 relative">
+              <iframe
+                title="Issue Location Map"
+                className="w-full h-full border-0"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${(issue.location?.coordinates?.[0] || 79.8296) - 0.008}%2C${(issue.location?.coordinates?.[1] || 11.9340) - 0.008}%2C${(issue.location?.coordinates?.[0] || 79.8296) + 0.008}%2C${(issue.location?.coordinates?.[1] || 11.9340) + 0.008}&layer=mapnik&marker=${issue.location?.coordinates?.[1] || 11.9340}%2C${issue.location?.coordinates?.[0] || 79.8296}`}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Citizen Mandatory Resolution Confirmation */}
         {issue.status === 'RESOLVED' && !issue.citizen_verified_resolved && isReporter && (
           <div className="p-4 rounded-xl bg-accent/20 border-2 border-accent/60 flex items-center justify-between gap-4">

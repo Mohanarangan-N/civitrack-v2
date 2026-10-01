@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 
 import { Navbar } from '@/components/Navbar';
+import { MobileNav } from '@/components/MobileNav';
 import { Footer } from '@/components/Footer';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
 import { useSocket } from '@/hooks/useSocket';
@@ -21,6 +22,8 @@ import { NGODashboard } from '@/pages/NGODashboard';
 import { AuthorityDashboard } from '@/pages/AuthorityDashboard';
 import { NotificationsPage } from '@/pages/NotificationsPage';
 import { AnonymousTrackPage } from '@/pages/AnonymousTrackPage';
+import { DeveloperDashboard } from '@/pages/DeveloperDashboard';
+import { AIShowcasePage } from '@/pages/AIShowcasePage';
 
 import '@/i18n';
 
@@ -55,10 +58,13 @@ export function App() {
               <Route path="/authority" element={<AuthorityDashboard />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/track" element={<AnonymousTrackPage />} />
+              <Route path="/ai" element={<AIShowcasePage />} />
+              <Route path="/developer" element={<DeveloperDashboard />} />
             </Routes>
           </main>
 
           <Footer />
+          <MobileNav />
           <ChatbotWidget />
         </div>
 

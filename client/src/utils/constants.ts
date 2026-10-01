@@ -19,7 +19,7 @@ export const PRIORITY_CONFIG: Record<IssuePriority, { color: string; bg: string;
 };
 
 export const STATUS_CONFIG: Record<IssueStatus, { label: string; color: string; className: string }> = {
-  PENDING_VERIFICATION: { label: 'Pending Verification', color: '#E8D61A',  className: 'badge-pending' },
+  PENDING_VERIFICATION: { label: '⏳ Pending Verification', color: '#E8D61A',  className: 'badge-pending' },
   VERIFIED:             { label: 'Verified',             color: '#3B9ED4',  className: 'badge-verified' },
   IN_PROGRESS:          { label: 'In Progress',          color: '#E8901A',  className: 'badge-progress' },
   RESOLVED:             { label: 'Resolved',             color: '#22A66A',  className: 'badge-resolved' },

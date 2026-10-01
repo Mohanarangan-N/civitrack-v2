@@ -17,11 +17,19 @@ def serialize_doc(doc: dict) -> dict:
         if isinstance(v, ObjectId):
             result[k] = str(v)
         elif isinstance(v, datetime):
-            result[k] = v.isoformat()
+            if v.tzinfo is None:
+                result[k] = v.replace(tzinfo=timezone.utc).isoformat()
+            else:
+                result[k] = v.astimezone(timezone.utc).isoformat()
         elif isinstance(v, dict):
             result[k] = serialize_doc(v)
         elif isinstance(v, list):
-            result[k] = [serialize_doc(i) if isinstance(i, dict) else (str(i) if isinstance(i, ObjectId) else (i.isoformat() if isinstance(i, datetime) else i)) for i in v]
+            result[k] = [
+                serialize_doc(i) if isinstance(i, dict)
+                else (str(i) if isinstance(i, ObjectId)
+                else (i.replace(tzinfo=timezone.utc).isoformat() if isinstance(i, datetime) else i))
+                for i in v
+            ]
         else:
             result[k] = v
     if "_id" in result:

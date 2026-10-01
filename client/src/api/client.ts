@@ -1,8 +1,19 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
+const rawUrl = (import.meta.env.VITE_API_URL || '').trim();
+let baseURL = '/api';
+
+if (rawUrl && rawUrl !== '/api') {
+  // If it's a domain without scheme, add https
+  const withProtocol = rawUrl.startsWith('http://') || rawUrl.startsWith('https://')
+    ? rawUrl
+    : `https://${rawUrl}`;
+  baseURL = withProtocol.endsWith('/api') ? withProtocol : `${withProtocol.replace(/\/+$/, '')}/api`;
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL,
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -16,13 +27,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor: handle 401
+// Response interceptor: handle 401 safely
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      useAuthStore.getState().logout();
-      window.location.href = '/login';
+      const isMeRoute = err.config?.url?.includes('/auth/me');
+      if (isMeRoute) {
+        useAuthStore.getState().logout();
+      }
     }
     return Promise.reject(err);
   }

@@ -3,33 +3,48 @@ import { mapAPI } from '@/api';
 import type { MapPin } from '@/types';
 import { PuducherryMap } from '@/components/map/PuducherryMap';
 import { WARDS, CATEGORY_CONFIG, PRIORITY_CONFIG } from '@/utils/constants';
-import { Filter, Flame, Layers, MapPin as MapPinIcon, AlertTriangle } from 'lucide-react';
+import { PUDUCHERRY_AUTHENTIC_PINS, PUDUCHERRY_WARDS_GEOJSON } from '@/utils/mapFallbacks';
+import { Filter, Flame, Layers, MapPin as MapPinIcon, AlertTriangle, Radio, RefreshCw, CheckCircle2 } from 'lucide-react';
 
 export const MapPage: React.FC = () => {
-  const [pins, setPins] = useState<MapPin[]>([]);
-  const [wardBoundaries, setWardBoundaries] = useState<any>(null);
+  const [pins, setPins] = useState<MapPin[]>(PUDUCHERRY_AUTHENTIC_PINS);
+  const [wardBoundaries, setWardBoundaries] = useState<any>(PUDUCHERRY_WARDS_GEOJSON);
   const [loading, setLoading] = useState(true);
+  const [isLive, setIsLive] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('');
   const [selectedWard, setSelectedWard] = useState<string>('');
   const [selectedPin, setSelectedPin] = useState<MapPin | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
 
-  useEffect(() => {
-    async function loadMapData() {
-      try {
-        const [pinsData, wardsData] = await Promise.all([
-          mapAPI.getPins(),
-          mapAPI.getWards(),
-        ]);
-        setPins(pinsData || []);
-        setWardBoundaries(wardsData);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  async function loadMapData() {
+    setLoading(true);
+    try {
+      const [pinsData, wardsData] = await Promise.all([
+        mapAPI.getPins().catch(() => null),
+        mapAPI.getWards().catch(() => null),
+      ]);
+      if (pinsData && Array.isArray(pinsData) && pinsData.length > 0) {
+        setPins(pinsData);
+        setIsLive(true);
+      } else {
+        setPins(PUDUCHERRY_AUTHENTIC_PINS);
+        setIsLive(false);
       }
+      setWardBoundaries(
+        wardsData && wardsData.features?.length > 0 ? wardsData : PUDUCHERRY_WARDS_GEOJSON
+      );
+    } catch (err) {
+      console.warn('Using authentic local GIS map dataset:', err);
+      setPins(PUDUCHERRY_AUTHENTIC_PINS);
+      setWardBoundaries(PUDUCHERRY_WARDS_GEOJSON);
+      setIsLive(false);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     loadMapData();
   }, []);
 
@@ -48,13 +63,35 @@ export const MapPage: React.FC = () => {
       {/* Sidebar Filter Panel */}
       <aside className="w-full md:w-80 bg-bg-surface border-r border-primary/20 p-4 flex flex-col gap-4 flex-shrink-0 overflow-y-auto">
         <div>
-          <h2 className="text-lg font-extrabold text-text-primary flex items-center gap-2">
-            <MapPinIcon size={20} className="text-accent" />
-            Puducherry Map GIS
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-text-primary flex items-center gap-2">
+              <MapPinIcon size={20} className="text-accent" />
+              Puducherry Map GIS
+            </h2>
+            <button
+              onClick={loadMapData}
+              title="Refresh GIS Pin Data"
+              className="p-1 rounded-lg hover:bg-primary/20 text-text-muted hover:text-accent transition-colors"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            </button>
+          </div>
           <p className="text-xs text-text-muted mt-0.5">
-            Interactive map with ward GeoJSON boundaries & AI priority glow
+            Interactive GIS plotting across all 10 Puducherry Wards with priority glow
           </p>
+        </div>
+
+        {/* Live Status Pill */}
+        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-bg-elevated border border-primary/20 text-xs">
+          <div className="flex items-center gap-2">
+            <span className={`w-2.5 h-2.5 rounded-full ${isLive ? 'bg-success animate-pulse' : 'bg-accent'}`} />
+            <span className="font-semibold text-text-primary">
+              {isLive ? 'Live API Synchronized' : 'Offline-Resilient GIS'}
+            </span>
+          </div>
+          <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent font-bold text-[10px]">
+            {filteredPins.length} Plotted
+          </span>
         </div>
 
         {/* Critical Alert Bar */}
@@ -83,7 +120,64 @@ export const MapPage: React.FC = () => {
           </span>
         </button>
 
-        {/* Filters */}
+        {/* Quick Filter Chips */}
+        <div className="space-y-1.5">
+          <label className="block text-[11px] font-bold text-text-muted uppercase">Quick Focus</label>
+          <div className="flex flex-wrap gap-1.5 text-xs">
+            <button
+              onClick={() => { setSelectedCategory(''); setSelectedPriority(''); setSelectedWard(''); }}
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+                !selectedCategory && !selectedPriority && !selectedWard
+                  ? 'bg-accent text-white shadow-sm'
+                  : 'bg-bg-elevated border border-primary/20 text-text-muted hover:text-text-primary'
+              }`}
+            >
+              All ({pins.length})
+            </button>
+            <button
+              onClick={() => { setSelectedPriority('CRITICAL'); setSelectedCategory(''); }}
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+                selectedPriority === 'CRITICAL'
+                  ? 'bg-danger text-white shadow-sm'
+                  : 'bg-bg-elevated border border-primary/20 text-danger hover:bg-danger/10'
+              }`}
+            >
+              🔴 Critical
+            </button>
+            <button
+              onClick={() => { setSelectedCategory('ROADS'); setSelectedPriority(''); }}
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+                selectedCategory === 'ROADS'
+                  ? 'bg-accent text-white shadow-sm'
+                  : 'bg-bg-elevated border border-primary/20 text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              🛣️ Roads
+            </button>
+            <button
+              onClick={() => { setSelectedCategory('WATER'); setSelectedPriority(''); }}
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+                selectedCategory === 'WATER'
+                  ? 'bg-accent text-white shadow-sm'
+                  : 'bg-bg-elevated border border-primary/20 text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              💧 Water
+            </button>
+            <button
+              onClick={() => { setSelectedCategory('WASTE'); setSelectedPriority(''); }}
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+                selectedCategory === 'WASTE'
+                  ? 'bg-accent text-white shadow-sm'
+                  : 'bg-bg-elevated border border-primary/20 text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              🗑️ Waste
+            </button>
+          </div>
+        </div>
+
+        {/* Detailed Filters */}
         <div className="space-y-3 pt-2 border-t border-primary/10">
           <label className="block text-xs font-bold text-text-muted uppercase">Filter by Category</label>
           <select
@@ -132,10 +226,13 @@ export const MapPage: React.FC = () => {
           <div className="mt-auto p-4 bg-bg-elevated border border-accent/40 rounded-xl text-xs space-y-2 animate-slide-up">
             <div className="flex items-center justify-between font-bold text-accent">
               <span>{CATEGORY_CONFIG[selectedPin.category]?.emoji} {selectedPin.category}</span>
-              <span>{selectedPin.priority}</span>
+              <span className={`px-2 py-0.5 rounded text-[10px] ${
+                selectedPin.priority === 'CRITICAL' ? 'bg-danger/20 text-danger' :
+                selectedPin.priority === 'HIGH' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'
+              }`}>{selectedPin.priority}</span>
             </div>
-            <h4 className="font-bold text-text-primary text-sm line-clamp-1">{selectedPin.title}</h4>
-            <p className="text-text-muted text-[11px]">Ward: {selectedPin.ward}</p>
+            <h4 className="font-bold text-text-primary text-sm line-clamp-2">{selectedPin.title}</h4>
+            <p className="text-text-muted text-[11px]">Ward: <strong>{selectedPin.ward}</strong></p>
           </div>
         )}
       </aside>

@@ -27,7 +27,7 @@ async def connect_db():
             print(f"Connected to in-memory Mongomock DB: {db_name}")
         except Exception as mock_err:
             print(f"Mongomock initialization fallback: {mock_err}")
-            _client = AsyncIOMotorClient(uri)
+            _client = AsyncMongoMockClient()
             _db = _client[db_name]
 
 

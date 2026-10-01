@@ -16,3 +16,5 @@ scikit-image==0.23.2
 nltk==3.8.1
 joblib==1.4.0
 numpy==1.26.4
+mongomock-motor==0.0.32
+psutil==5.9.8

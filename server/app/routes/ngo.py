@@ -10,9 +10,6 @@ router = APIRouter()
 async def get_pending(current_user=Depends(require_ngo)):
     db = get_db()
     query = {"status": "PENDING_VERIFICATION"}
-    if current_user["role"] == "NGO":
-        query["ward"] = current_user["ward"]
-
     cursor = db.issues.find(query).sort("priority_score", -1)
     issues = await cursor.to_list(length=100)
     return [serialize_doc(i) for i in issues]

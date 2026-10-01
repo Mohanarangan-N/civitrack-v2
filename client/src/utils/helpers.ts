@@ -1,11 +1,34 @@
 import { formatDistanceToNow, format } from 'date-fns';
 
-export function timeAgo(dateStr: string | null | undefined): string {
-  if (!dateStr) return 'Unknown';
+export function parseDate(dateStr: string | null | undefined): Date | null {
+  if (!dateStr) return null;
   try {
-    return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
+    let s = String(dateStr).trim();
+    if (!s.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(s)) {
+      s = s + 'Z';
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
   } catch {
-    return 'Unknown';
+    return null;
+  }
+}
+
+export function timeAgo(dateStr: string | null | undefined): string {
+  const d = parseDate(dateStr);
+  if (!d) return 'just now';
+  try {
+    const now = new Date();
+    const diffSec = Math.floor((now.getTime() - d.getTime()) / 1000);
+    if (diffSec < 45 && diffSec >= -5) {
+      return 'just now';
+    }
+    if (diffSec < 90 && diffSec >= 45) {
+      return '1m ago';
+    }
+    return formatDistanceToNow(d, { addSuffix: true });
+  } catch {
+    return 'just now';
   }
 }
 

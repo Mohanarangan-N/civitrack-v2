@@ -57,6 +57,7 @@ class IssueCreate(BaseModel):
     area_type: AreaType = AreaType.RESIDENTIAL
     hectic_level: HecticLevel = HecticLevel.MODERATE
     is_anonymous: bool = False
+    attachments: Optional[List[str]] = []
 
 
 class IssueVerify(BaseModel):

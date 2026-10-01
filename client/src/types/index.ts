@@ -83,9 +83,10 @@ export interface IssueCreate {
   ward: string;
   latitude: number;
   longitude: number;
-  area_type: AreaType;
-  hectic_level: HecticLevel;
+  area_type?: AreaType;
+  hectic_level?: HecticLevel;
   is_anonymous: boolean;
+  attachments?: string[];
 }
 
 // ─── Map Types ──────────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ export interface MapPin {
   category: IssueCategory;
   priority: IssuePriority;
   priority_score: number;
-  status: IssueStatus;
+  status?: IssueStatus;
   location: { type: string; coordinates: [number, number] };
   ward: string;
   like_count: number;

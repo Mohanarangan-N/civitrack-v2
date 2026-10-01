@@ -40,32 +40,54 @@
 }
 
 @layer components {
+  /* ─── Card System ─────────────────────────────────────────────── */
   .card {
     @apply bg-bg-surface rounded-xl border border-primary/20 p-4;
     background: linear-gradient(145deg, #111E17, #1A2F23);
   }
 
   .card-glass {
-    @apply rounded-xl border border-primary/20 backdrop-blur-sm;
-    background: rgba(13, 92, 58, 0.08);
+    @apply rounded-2xl border border-primary/20 backdrop-blur-xl;
+    background: rgba(17, 30, 23, 0.6);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(34, 166, 106, 0.1);
   }
 
+  .card-premium {
+    @apply rounded-2xl border border-primary/25 p-5;
+    background: linear-gradient(145deg, rgba(17,30,23,0.95), rgba(26,47,35,0.85));
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(34, 166, 106, 0.05);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .card-premium:hover {
+    border-color: rgba(34, 166, 106, 0.35);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 166, 106, 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* ─── Buttons ─────────────────────────────────────────────────── */
   .btn-primary {
-    @apply bg-accent hover:bg-primary text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-accent/20 active:scale-95;
+    @apply bg-accent hover:bg-primary text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-accent/25 active:scale-95;
   }
 
   .btn-secondary {
-    @apply border border-primary/40 text-text-primary hover:bg-primary/20 font-medium px-5 py-2.5 rounded-lg transition-all duration-200;
+    @apply border border-primary/40 text-text-primary hover:bg-primary/20 font-medium px-5 py-2.5 rounded-xl transition-all duration-200;
   }
 
   .btn-danger {
-    @apply bg-danger hover:bg-danger/80 text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200;
+    @apply bg-danger hover:bg-danger/80 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200;
   }
 
+  .btn-ghost {
+    @apply text-text-secondary hover:text-text-primary hover:bg-primary/15 font-medium px-4 py-2 rounded-xl transition-all duration-200;
+  }
+
+  /* ─── Inputs ──────────────────────────────────────────────────── */
   .input-field {
-    @apply w-full bg-bg-elevated border border-primary/30 text-text-primary placeholder-text-muted rounded-lg px-4 py-3 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all duration-200;
+    @apply w-full bg-bg-elevated border border-primary/30 text-text-primary placeholder-text-muted rounded-xl px-4 py-3 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200;
   }
 
+  /* ─── Badges ──────────────────────────────────────────────────── */
   .badge {
     @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
   }
@@ -81,22 +103,105 @@
   .badge-resolved  { @apply badge bg-success/20 text-success; }
   .badge-rejected  { @apply badge bg-danger/20 text-danger; }
 
+  /* ─── Typography & Layout ─────────────────────────────────────── */
   .section-title {
     @apply text-2xl font-bold text-text-primary;
   }
 
   .nav-link {
-    @apply flex items-center gap-2 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-primary/20 transition-all duration-200 text-sm font-medium;
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-primary/20 transition-all duration-200 text-sm font-medium relative;
   }
 
   .nav-link.active {
     @apply text-accent bg-primary/30;
   }
 
+  .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    background: #22A66A;
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(34, 166, 106, 0.6);
+  }
+
   .stat-card {
     @apply card flex flex-col gap-1 hover:border-accent/40 transition-all duration-300;
   }
 
+  /* ─── Glassmorphism Utilities ──────────────────────────────────── */
+  .glass-panel {
+    background: rgba(17, 30, 23, 0.65);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(34, 166, 106, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-card {
+    background: rgba(17, 30, 23, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(34, 166, 106, 0.1);
+  }
+
+  /* ─── Shimmer Loading Skeleton ────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(13, 92, 58, 0.1) 25%,
+      rgba(34, 166, 106, 0.15) 50%,
+      rgba(13, 92, 58, 0.1) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+    border-radius: 8px;
+  }
+
+  /* ─── Ambient Floating Orbs ───────────────────────────────────── */
+  .ambient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ambient-orb-green {
+    background: radial-gradient(circle, rgba(34, 166, 106, 0.3) 0%, transparent 70%);
+    animation: ambient-pulse 8s ease-in-out infinite;
+  }
+
+  .ambient-orb-blue {
+    background: radial-gradient(circle, rgba(59, 158, 212, 0.2) 0%, transparent 70%);
+    animation: ambient-pulse 8s ease-in-out 4s infinite;
+  }
+
+  .ambient-orb-gold {
+    background: radial-gradient(circle, rgba(232, 144, 26, 0.15) 0%, transparent 70%);
+    animation: ambient-pulse 10s ease-in-out 2s infinite;
+  }
+
+  /* ─── Severity Meter ──────────────────────────────────────────── */
+  .severity-meter {
+    @apply h-2 rounded-full overflow-hidden;
+    background: rgba(13, 92, 58, 0.3);
+  }
+
+  .severity-meter-fill {
+    @apply h-full rounded-full transition-all duration-1000 ease-out;
+  }
+
+  .severity-low    { @apply bg-success; box-shadow: 0 0 8px rgba(34, 166, 106, 0.5); }
+  .severity-medium { @apply bg-yellow-400; box-shadow: 0 0 8px rgba(232, 214, 26, 0.5); }
+  .severity-high   { @apply bg-warning; box-shadow: 0 0 8px rgba(232, 144, 26, 0.5); }
+  .severity-critical { @apply bg-danger; box-shadow: 0 0 8px rgba(232, 80, 56, 0.5); }
+
+  /* ─── Map Markers ─────────────────────────────────────────────── */
   .marker-emoji {
     display: flex;
     align-items: center;
@@ -119,6 +224,7 @@
   .marker-high     { border-color: #E8901A; box-shadow: 0 0 12px rgba(232,144,26,0.5); }
   .marker-critical { border-color: #E85038; box-shadow: 0 0 16px rgba(232,80,56,0.7); animation: pulse-critical 1.5s ease-in-out infinite; }
 
+  /* ─── Stories / Social ────────────────────────────────────────── */
   .story-ring {
     @apply rounded-full p-0.5;
     background: linear-gradient(135deg, #22A66A, #0D5C3A, #3B9ED4);
@@ -137,46 +243,128 @@
     @apply absolute -left-2.5 w-4 h-4 rounded-full border-2 border-primary bg-bg;
   }
 
-  .glow-green {
-    box-shadow: 0 0 20px rgba(34, 166, 106, 0.3);
-  }
-
+  /* ─── Gradient Text ───────────────────────────────────────────── */
   .gradient-text {
     background: linear-gradient(135deg, #22A66A, #3B9ED4);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  .gradient-text-gold {
+    background: linear-gradient(135deg, #E8901A, #E8D61A);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow-green {
+    box-shadow: 0 0 20px rgba(34, 166, 106, 0.3);
+  }
+
+  /* ─── Stagger Animation Delays ────────────────────────────────── */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-6 { animation-delay: 0.3s; }
+  .stagger-7 { animation-delay: 0.35s; }
+  .stagger-8 { animation-delay: 0.4s; }
+
+  /* ─── Demo Credential Quick-Fill ──────────────────────────────── */
+  .demo-chip {
+    @apply flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all duration-200;
+  }
+
+  .demo-chip:hover {
+    @apply scale-[1.02];
+  }
+
+  .demo-chip-citizen {
+    @apply demo-chip border-accent/40 bg-accent/10 text-accent hover:bg-accent/20;
+  }
+
+  .demo-chip-ngo {
+    @apply demo-chip border-warning/40 bg-warning/10 text-warning hover:bg-warning/20;
+  }
+
+  .demo-chip-authority {
+    @apply demo-chip border-info/40 bg-info/10 text-info hover:bg-info/20;
+  }
 }
 
-/* Leaflet overrides */
+/* ─── Leaflet Overrides ─────────────────────────────────────────── */
 .leaflet-container {
   background: #0A1510 !important;
   font-family: 'Inter', sans-serif;
 }
 
 .leaflet-popup-content-wrapper {
-  background: #111E17 !important;
-  border: 1px solid rgba(13, 92, 58, 0.4) !important;
+  background: rgba(17, 30, 23, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(34, 166, 106, 0.25) !important;
   color: #E8F5EE !important;
-  border-radius: 12px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
 
 .leaflet-popup-tip {
-  background: #111E17 !important;
+  background: rgba(17, 30, 23, 0.95) !important;
 }
 
 .leaflet-control-zoom a {
-  background: #111E17 !important;
+  background: rgba(17, 30, 23, 0.9) !important;
   color: #E8F5EE !important;
   border-color: rgba(13, 92, 58, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
 }
 
 .leaflet-control-zoom a:hover {
   background: #0D5C3A !important;
 }
 
+.ward-tooltip {
+  background: rgba(17, 30, 23, 0.9) !important;
+  border: 1px solid rgba(34, 166, 106, 0.3) !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  color: #E8F5EE !important;
+}
+
+.ward-tooltip::before {
+  border-top-color: rgba(34, 166, 106, 0.3) !important;
+}
+
+/* ─── Heatmap Canvas Styling ────────────────────────────────────── */
+.leaflet-heatmap-layer {
+  opacity: 0.7;
+}
+
+/* ─── Global Animations ─────────────────────────────────────────── */
 @keyframes pulse-critical {
   0%, 100% { box-shadow: 0 0 0 0 rgba(232, 80, 56, 0.7); transform: scale(1); }
   50% { box-shadow: 0 0 0 12px rgba(232, 80, 56, 0); transform: scale(1.05); }
+}
+
+@keyframes ambient-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.15); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+/* ─── Print Styles ──────────────────────────────────────────────── */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; color: black; }
+  .card, .card-glass, .card-premium { background: white; border: 1px solid #ddd; box-shadow: none; }
 }
