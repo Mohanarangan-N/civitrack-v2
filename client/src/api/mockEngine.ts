@@ -773,13 +773,24 @@ export function handleMockRequest(config: any): any | null {
   }
 
   if (path === '/analytics/sla') {
-    return [
-      { category: 'ROADS', target_hours: 48, actual_avg_hours: 36, compliance_rate: 89.2 },
-      { category: 'WATER', target_hours: 24, actual_avg_hours: 19, compliance_rate: 94.5 },
-      { category: 'WASTE', target_hours: 12, actual_avg_hours: 8.5, compliance_rate: 96.0 },
-      { category: 'LIGHTING', target_hours: 24, actual_avg_hours: 14, compliance_rate: 92.1 },
-      { category: 'PUBLIC_PROPERTY', target_hours: 72, actual_avg_hours: 58, compliance_rate: 84.6 },
-    ];
+    const issues = getStoredIssues();
+    const slaLimits: Record<string, number> = { LOW: 14, MEDIUM: 7, HIGH: 3, CRITICAL: 1 };
+    return issues.slice(0, 15).map((i) => {
+      const limit = slaLimits[i.priority] || 7;
+      const ageDays = Number(((Date.now() - new Date(i.created_at).getTime()) / (1000 * 3600 * 24)).toFixed(1));
+      return {
+        _id: i.id,
+        title: i.title,
+        category: i.category,
+        ward: i.ward,
+        priority: i.priority || 'MEDIUM',
+        status: i.status || 'VERIFIED',
+        created_at: i.created_at,
+        age_days: Math.max(0.4, ageDays),
+        sla_days: limit,
+        sla_breached: i.status !== 'RESOLVED' && ageDays > limit,
+      };
+    });
   }
 
   if (path === '/analytics/preventative-insights') {

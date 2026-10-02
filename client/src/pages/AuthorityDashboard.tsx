@@ -347,6 +347,26 @@ ACTION ROADMAP BY DOMAIN:
               "Monsoon moisture ingress through underground cable junction boxes lacking IP68 resin sealing",
               "Uncalibrated astronomical timer switches causing daytime burning and premature LED driver failure",
             ],
+            AIR_QUALITY: [
+              "Open biomass and horticultural waste combustion on peri-urban vacant plots",
+              "High vehicular idling congestion at non-synchronized traffic signals along ECR / Anna Salai",
+              "Construction dust dispersion from uncurtained commercial developments",
+            ],
+            PARKS: [
+              "Over-extraction of coastal shallow aquifer leading to localized salinization in municipal park vegetation",
+              "Inadequate drip irrigation infrastructure causing excessive manual water bowser dependency",
+              "Lack of periodic arboricultural trimming leading to storm branch failures",
+            ],
+            PUBLIC_PROPERTY: [
+              "Marine aerosol salt crystallization accelerating concrete spalling on heritage waterfront monuments",
+              "Pedestrian overuse on Promenade Beach balustrades lacking sacrificial protective coatings",
+              "Delayed structural maintenance on municipal market shelters and public facilities",
+            ],
+            OTHER: [
+              "Cross-departmental jurisdictional fragmentation between PWD, LAD, and Electricity Department",
+              "Absence of unified digital Right-of-Way coordination for municipal excavations",
+              "Lack of automated sensor telemetry for early failure detection",
+            ],
           };
 
           const defaultInterventions: Record<string, any[]> = {
@@ -370,10 +390,35 @@ ACTION ROADMAP BY DOMAIN:
               { tier: "90-Day Structural Hardening", action: "Upgrade conventional luminaire enclosures to Marine-Grade (C5-M corrosion resistant) IP66 fixtures", impact: "85% reduction in premature LED luminaire replacements" },
               { tier: "1-Year Strategic Resilience", action: "Centralized Smart Streetlight Central Management System (CCMS) with real-time fault alerts", impact: "92% reduction in unnotified street dark spots city-wide" },
             ],
+            AIR_QUALITY: [
+              { tier: "30-Day Immediate Win", action: "Intensify ward municipal patrols against open waste and biomass burning with immediate spot fines", impact: "65% drop in localized smoke haze complaints" },
+              { tier: "90-Day Structural Hardening", action: "Deploy synchronized smart traffic signal corridors along ECR and Anna Salai junctions", impact: "40% reduction in peak-hour vehicular idle emissions" },
+              { tier: "1-Year Strategic Resilience", action: "Establish real-time IoT ambient air quality monitoring mesh across all 10 wards", impact: "75% improvement in localized pollution response speed" },
+            ],
+            PARKS: [
+              { tier: "30-Day Immediate Win", action: "Implement scheduled arboricultural safety pruning of hazardous trees ahead of cyclone season", impact: "80% reduction in cyclone-induced branch fall damage" },
+              { tier: "90-Day Structural Hardening", action: "Install solar-powered automated drip irrigation utilizing recycled municipal wastewater", impact: "60% reduction in potable water usage for municipal greenspaces" },
+              { tier: "1-Year Strategic Resilience", action: "Develop urban micro-forests (Miyawaki method) in peri-urban public parcels", impact: "35% increase in native biodiversity canopy cover" },
+            ],
+            PUBLIC_PROPERTY: [
+              { tier: "30-Day Immediate Win", action: "Apply hydrophobic sacrificial sealants to heritage promenade balustrades and monuments", impact: "70% reduction in sea-spray structural degradation" },
+              { tier: "90-Day Structural Hardening", action: "Refurbish high-traffic municipal bus shelters and public sanitary complexes with vandal-resistant fittings", impact: "85% decrease in recurring maintenance work orders" },
+              { tier: "1-Year Strategic Resilience", action: "Implement a digital QR asset tagging registry for automated preventative asset inspection", impact: "90% tracking coverage of all municipal public assets" },
+            ],
+            OTHER: [
+              { tier: "30-Day Immediate Win", action: "Establish cross-departmental rapid grievance dispatch protocol between PWD and Municipal Corporation", impact: "50% faster inter-departmental ticket resolution" },
+              { tier: "90-Day Structural Hardening", action: "Deploy Unified Urban GIS Decision Support Portal across all municipal sub-offices", impact: "75% reduction in duplicate civic inspection trips" },
+              { tier: "1-Year Strategic Resilience", action: "Establish citizen co-governance participatory budget allocations for ward preventative works", impact: "85% citizen satisfaction rating in ward service delivery" },
+            ],
           };
 
-          const causes = catInfo?.root_causes || defaultRootCauses[selectedPreventionCat] || defaultRootCauses.ROADS;
-          const plans = catInfo?.preventative_interventions || defaultInterventions[selectedPreventionCat] || defaultInterventions.ROADS;
+          const causes = (catInfo?.root_causes && catInfo.root_causes.length > 0)
+            ? catInfo.root_causes
+            : (defaultRootCauses[selectedPreventionCat] || defaultRootCauses.ROADS);
+
+          const rawPlans = (catInfo?.preventative_interventions && catInfo.preventative_interventions.length > 0)
+            ? catInfo.preventative_interventions
+            : (defaultInterventions[selectedPreventionCat] || defaultInterventions.ROADS);
 
           return (
             <div className="grid lg:grid-cols-2 gap-6">
@@ -400,19 +445,25 @@ ACTION ROADMAP BY DOMAIN:
                   Prescribed Preventative Interventions
                 </span>
                 <div className="space-y-2.5">
-                  {plans.map((p: any, i: number) => (
-                    <div key={i} className="p-3.5 rounded-xl bg-bg-elevated border border-primary/30 space-y-1.5 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent uppercase">
-                          {p.tier}
-                        </span>
-                        <span className="text-[11px] font-bold text-success flex items-center gap-1">
-                          <CheckCircle2 size={12} /> {p.impact || p.projected_reduction}
-                        </span>
+                  {rawPlans.map((p: any, i: number) => {
+                    const tier = typeof p === 'string' ? `Tier ${i + 1} Action` : (p.tier || `Tier ${i + 1}`);
+                    const impact = typeof p === 'string' ? 'Target: -65% recurrence' : (p.impact || p.projected_reduction || 'Target: -65% recurrence');
+                    const action = typeof p === 'string' ? p : (p.action || p.title || 'Execute municipal preventative work order');
+
+                    return (
+                      <div key={i} className="p-3.5 rounded-xl bg-bg-elevated border border-primary/30 space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent uppercase">
+                            {tier}
+                          </span>
+                          <span className="text-[11px] font-bold text-success flex items-center gap-1">
+                            <CheckCircle2 size={12} /> {impact}
+                          </span>
+                        </div>
+                        <p className="text-text-primary font-semibold">{action}</p>
                       </div>
-                      <p className="text-text-primary font-semibold">{p.action}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
