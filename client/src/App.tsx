@@ -25,6 +25,8 @@ import { AnonymousTrackPage } from '@/pages/AnonymousTrackPage';
 import { DeveloperDashboard } from '@/pages/DeveloperDashboard';
 import { AIShowcasePage } from '@/pages/AIShowcasePage';
 
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+
 import '@/i18n';
 
 const queryClient = new QueryClient();
@@ -44,22 +46,80 @@ export function App() {
           
           <main className="flex-1">
             <Routes>
+              {/* Public & Guest Accessible Routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/feed" element={<FeedPage />} />
-              <Route path="/report" element={<ReportIssuePage />} />
               <Route path="/issues/:id" element={<IssueDetailPage />} />
               <Route path="/map" element={<MapPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/profile/:id" element={<ProfilePage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
-              <Route path="/ngo" element={<NGODashboard />} />
-              <Route path="/authority" element={<AuthorityDashboard />} />
-              <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/track" element={<AnonymousTrackPage />} />
               <Route path="/ai" element={<AIShowcasePage />} />
-              <Route path="/developer" element={<DeveloperDashboard />} />
+
+              {/* Citizen & Authenticated User Protected Routes */}
+              <Route
+                path="/report"
+                element={
+                  <ProtectedRoute requireAuth={true} allowedRoles={['CITIZEN', 'NGO', 'AUTHORITY']} pageTitle="Report Civic Issue">
+                    <ReportIssuePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute requireAuth={true} pageTitle="Citizen Profile">
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/:id"
+                element={
+                  <ProtectedRoute requireAuth={true} pageTitle="User Profile">
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute requireAuth={true} pageTitle="Civic Notifications">
+                    <NotificationsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* NGO Exclusive Field Verification Route */}
+              <Route
+                path="/ngo"
+                element={
+                  <ProtectedRoute requireAuth={true} allowedRoles={['NGO', 'AUTHORITY']} pageTitle="Ward NGO Field Verification Hub">
+                    <NGODashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Municipal Authority Exclusive DSS Command Center Route */}
+              <Route
+                path="/authority"
+                element={
+                  <ProtectedRoute requireAuth={true} allowedRoles={['AUTHORITY']} pageTitle="Puducherry Municipal Command DSS">
+                    <AuthorityDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Developer & System Health Route */}
+              <Route
+                path="/developer"
+                element={
+                  <ProtectedRoute requireAuth={true} allowedRoles={['AUTHORITY']} pageTitle="Developer Diagnostics & System Health">
+                    <DeveloperDashboard />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </main>
 

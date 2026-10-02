@@ -9,10 +9,13 @@ export const MobileNav: React.FC = () => {
   const { isAuthenticated, user } = useAuthStore();
   const { unreadNotifications } = useUIStore();
 
+  const isNGO = user?.role === 'NGO';
+  const isAuthority = user?.role === 'AUTHORITY';
+
   const navItems = [
     { to: '/feed', icon: Home, label: 'Feed' },
     { to: '/map', icon: MapPin, label: 'Map' },
-    { to: '/leaderboard', icon: Award, label: 'Rank' },
+    { to: isNGO ? '/ngo' : isAuthority ? '/authority' : '/leaderboard', icon: Award, label: 'CenterSlot' },
     { to: '/notifications', icon: Bell, label: 'Alerts', badge: unreadNotifications },
     { to: isAuthenticated ? `/profile/${user?.id}` : '/login', icon: User, label: 'Me' },
   ];
@@ -34,16 +37,43 @@ export const MobileNav: React.FC = () => {
 
           <div className="flex items-center px-2 py-2">
             {navItems.map(({ to, icon: Icon, label, badge }, idx) => {
-              const isMid = idx === 2; // center slot — replace with Report FAB
+              const isMid = idx === 2; // center slot — role-specific action button
               const isActive = location.pathname === to || (to.startsWith('/profile') && location.pathname.startsWith('/profile'));
 
               if (isMid) {
-                // Central elevated Report FAB
+                // Central elevated Role FAB
+                if (isNGO) {
+                  return (
+                    <div key="fab-ngo" className="flex-1 flex justify-center -mt-6">
+                      <Link to="/ngo" className="group relative" title="NGO Verification Hub">
+                        <div className="absolute inset-0 rounded-full bg-warning blur-md opacity-60 group-hover:opacity-90 transition-opacity scale-110" />
+                        <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-xl shadow-amber-500/40 group-hover:scale-110 group-active:scale-95 transition-transform duration-200">
+                          <span className="text-xl">🛡️</span>
+                        </div>
+                      </Link>
+                    </div>
+                  );
+                }
+
+                if (isAuthority) {
+                  return (
+                    <div key="fab-auth" className="flex-1 flex justify-center -mt-6">
+                      <Link to="/authority" className="group relative" title="Municipal DSS">
+                        <div className="absolute inset-0 rounded-full bg-accent blur-md opacity-60 group-hover:opacity-90 transition-opacity scale-110" />
+                        <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-accent to-emerald-600 flex items-center justify-center shadow-xl shadow-accent/40 group-hover:scale-110 group-active:scale-95 transition-transform duration-200">
+                          <span className="text-xl">🏛️</span>
+                        </div>
+                      </Link>
+                    </div>
+                  );
+                }
+
                 return (
-                  <div key="fab" className="flex-1 flex justify-center -mt-6">
+                  <div key="fab-citizen" className="flex-1 flex justify-center -mt-6">
                     <Link
                       to={isAuthenticated ? '/report' : '/login'}
                       className="group relative"
+                      title="Report Civic Issue"
                     >
                       {/* Outer glow ring */}
                       <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent to-emerald-400 blur-md opacity-60 group-hover:opacity-90 transition-opacity scale-110" />

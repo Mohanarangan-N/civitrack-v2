@@ -6,6 +6,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useAuthStore } from '@/store/authStore';
 
 /* ─── Animated Counter Hook ─────────────────────────────────── */
 function useCountUp(target: number, duration = 2000, trigger = true) {
@@ -73,6 +74,8 @@ function TechBadge({ icon: Icon, name, detail }: { icon: React.ElementType; name
 }
 
 export const LandingPage: React.FC = () => {
+  const { isAuthenticated, user } = useAuthStore();
+
   return (
     <div className="min-h-screen bg-bg text-text-primary overflow-hidden">
 
@@ -109,12 +112,37 @@ export const LandingPage: React.FC = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <Link to="/register">
-              <Button size="lg" className="px-8 shadow-xl shadow-accent/25 group">
-                Get Started as Citizen
-                <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              user?.role === 'AUTHORITY' ? (
+                <Link to="/authority">
+                  <Button size="lg" className="px-8 shadow-xl shadow-accent/25 group bg-accent hover:bg-accent/80 text-white font-bold">
+                    Go to Authority Command DSS
+                    <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              ) : user?.role === 'NGO' ? (
+                <Link to="/ngo">
+                  <Button size="lg" className="px-8 shadow-xl shadow-warning/25 group bg-warning hover:bg-warning/80 text-black font-bold">
+                    Go to NGO Verification Hub
+                    <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/feed">
+                  <Button size="lg" className="px-8 shadow-xl shadow-accent/25 group">
+                    Explore Citizen Feed
+                    <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              )
+            ) : (
+              <Link to="/register">
+                <Button size="lg" className="px-8 shadow-xl shadow-accent/25 group">
+                  Get Started as Citizen
+                  <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            )}
             <Link to="/map">
               <Button variant="secondary" size="lg" className="px-8">
                 <MapPin size={18} className="mr-2" />

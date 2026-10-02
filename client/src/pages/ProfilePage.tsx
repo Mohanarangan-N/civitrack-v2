@@ -53,26 +53,68 @@ export const ProfilePage: React.FC = () => {
       
       {/* Profile Header */}
       <div className="card p-6 border-primary/30 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center font-black text-3xl text-white shadow-xl shadow-accent/20">
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center font-black text-3xl text-white shadow-xl ${
+          profileUser.role === 'AUTHORITY'
+            ? 'bg-gradient-to-br from-accent to-emerald-700 shadow-accent/20'
+            : profileUser.role === 'NGO'
+            ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/20'
+            : 'bg-gradient-to-br from-accent to-primary shadow-accent/20'
+        }`}>
           {profileUser.name.charAt(0).toUpperCase()}
         </div>
 
         <div className="flex-1">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
             <h1 className="text-2xl font-extrabold text-text-primary">{profileUser.name}</h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-accent/20 text-accent text-xs font-bold border border-accent/30">
-              {profileUser.role}
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+              profileUser.role === 'AUTHORITY'
+                ? 'bg-accent/20 text-accent border-accent/40'
+                : profileUser.role === 'NGO'
+                ? 'bg-warning/20 text-warning border-warning/40'
+                : 'bg-primary/30 text-accent border-primary/40'
+            }`}>
+              {profileUser.role === 'AUTHORITY' ? '🏛️ MUNICIPAL AUTHORITY' : profileUser.role === 'NGO' ? '🛡️ WARD NGO INSPECTOR' : '🌿 VERIFIED CITIZEN'}
             </span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-text-muted">
             <span className="flex items-center gap-1">
-              <MapPin size={14} className="text-accent" /> {profileUser.ward} Ward
+              <MapPin size={14} className="text-accent" /> {profileUser.ward || 'Puducherry'} Ward
             </span>
             <span className="flex items-center gap-1">
-              <Shield size={14} className="text-accent" /> {profileUser.level}
+              <Shield size={14} className="text-accent" /> {profileUser.level || 'PUDUCHERRY DEFENDER'}
             </span>
           </div>
+
+          {/* Role Dedicated Workspace Quick Link */}
+          {currentUser?.id === profileUser.id && (
+            <div className="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
+              {profileUser.role === 'AUTHORITY' && (
+                <a
+                  href="/authority"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/20 border border-accent/40 text-accent hover:bg-accent/30 text-xs font-bold transition-all"
+                >
+                  <span>🏛️ Access Authority Decision Support Center →</span>
+                </a>
+              )}
+              {profileUser.role === 'NGO' && (
+                <a
+                  href="/ngo"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning/20 border border-warning/40 text-warning hover:bg-warning/30 text-xs font-bold transition-all"
+                >
+                  <span>🛡️ Access NGO Field Verification Queue →</span>
+                </a>
+              )}
+              {profileUser.role === 'CITIZEN' && (
+                <a
+                  href="/report"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent hover:bg-primary-light text-white text-xs font-bold transition-all shadow-md shadow-accent/20"
+                >
+                  <span>+ Report New Issue →</span>
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

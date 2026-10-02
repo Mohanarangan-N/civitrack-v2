@@ -46,6 +46,29 @@ export const Navbar: React.FC = () => {
 
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-1">
+          {/* Role-Specific Primary Home Link */}
+          {user?.role === 'NGO' ? (
+            <Link
+              to="/ngo"
+              className={`nav-link font-bold text-warning border border-warning/30 bg-warning/10 hover:bg-warning/20 rounded-xl px-3 py-1.5 flex items-center gap-1.5 ${
+                location.pathname === '/ngo' ? 'ring-2 ring-warning/50 bg-warning/20' : ''
+              }`}
+            >
+              <Shield size={16} className="text-warning" />
+              <span>NGO Verification Hub</span>
+            </Link>
+          ) : user?.role === 'AUTHORITY' ? (
+            <Link
+              to="/authority"
+              className={`nav-link font-bold text-accent border border-accent/30 bg-accent/10 hover:bg-accent/20 rounded-xl px-3 py-1.5 flex items-center gap-1.5 ${
+                location.pathname === '/authority' ? 'ring-2 ring-accent/50 bg-accent/20' : ''
+              }`}
+            >
+              <LayoutDashboard size={16} className="text-accent" />
+              <span>Authority DSS Command</span>
+            </Link>
+          ) : null}
+
           <Link to="/feed" className={`nav-link ${location.pathname === '/feed' ? 'active' : ''}`}>
             {t('nav.feed')}
           </Link>
@@ -59,24 +82,16 @@ export const Navbar: React.FC = () => {
           </Link>
           <Link to="/track" className={`nav-link ${location.pathname === '/track' ? 'active' : ''}`}>
             <Search size={16} />
-            Track Anonymous
+            Track
           </Link>
           <Link to="/ai" className={`nav-link text-accent hover:text-accent-hover font-semibold flex items-center gap-1.5 ${location.pathname === '/ai' ? 'active' : ''}`}>
             <Sparkles size={16} className="text-accent animate-pulse" />
             AI Engine
           </Link>
 
-          {user?.role === 'NGO' && (
-            <Link to="/ngo" className={`nav-link text-warning ${location.pathname === '/ngo' ? 'active' : ''}`}>
-              <LayoutDashboard size={16} />
-              NGO Dashboard
-            </Link>
-          )}
-
           {user?.role === 'AUTHORITY' && (
-            <Link to="/authority" className={`nav-link text-accent ${location.pathname === '/authority' ? 'active' : ''}`}>
-              <LayoutDashboard size={16} />
-              Authority DSS
+            <Link to="/developer" className={`nav-link text-text-muted text-xs ${location.pathname === '/developer' ? 'active' : ''}`}>
+              Diagnostics
             </Link>
           )}
         </nav>
@@ -84,14 +99,35 @@ export const Navbar: React.FC = () => {
         {/* Right Controls */}
         <div className="flex items-center gap-3">
           
-          {/* Report Button */}
-          {isAuthenticated && (
+          {/* Report Button (For Citizens and General Use) */}
+          {isAuthenticated && user?.role === 'CITIZEN' && (
             <Link
               to="/report"
               className="hidden sm:inline-flex items-center gap-2 bg-accent hover:bg-primary-light text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all shadow-md shadow-accent/20 active:scale-95"
             >
               <PlusCircle size={18} />
               <span>{t('nav.report')}</span>
+            </Link>
+          )}
+
+          {/* Quick Action for NGO / Authority */}
+          {isAuthenticated && user?.role === 'NGO' && (
+            <Link
+              to="/ngo"
+              className="hidden sm:inline-flex items-center gap-1.5 bg-warning/20 border border-warning/40 text-warning hover:bg-warning/30 text-xs font-bold px-3 py-2 rounded-lg transition-all"
+            >
+              <Shield size={15} />
+              <span>Verify Issues</span>
+            </Link>
+          )}
+
+          {isAuthenticated && user?.role === 'AUTHORITY' && (
+            <Link
+              to="/authority"
+              className="hidden sm:inline-flex items-center gap-1.5 bg-accent/20 border border-accent/40 text-accent hover:bg-accent/30 text-xs font-bold px-3 py-2 rounded-lg transition-all"
+            >
+              <LayoutDashboard size={15} />
+              <span>DSS Overview</span>
             </Link>
           )}
 
@@ -130,17 +166,27 @@ export const Navbar: React.FC = () => {
                 )}
               </Link>
 
-              {/* Profile Link */}
+              {/* Profile Link with Role-Coded Badge */}
               <Link
                 to={`/profile/${user?.id}`}
                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-primary/20 transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-primary/40 border border-primary/50 flex items-center justify-center font-bold text-accent text-sm">
+                <div className={`w-8 h-8 rounded-full border flex items-center justify-center font-bold text-sm ${
+                  user?.role === 'AUTHORITY' 
+                    ? 'bg-accent/20 border-accent/50 text-accent' 
+                    : user?.role === 'NGO'
+                    ? 'bg-warning/20 border-warning/50 text-warning'
+                    : 'bg-primary/40 border-primary/50 text-accent'
+                }`}>
                   {user?.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden lg:block text-left text-xs">
-                  <span className="block font-semibold text-text-primary truncate max-w-[100px]">{user?.name}</span>
-                  <span className="block text-[10px] text-text-muted">{user?.role}</span>
+                  <span className="block font-semibold text-text-primary truncate max-w-[110px]">{user?.name}</span>
+                  <span className={`block text-[10px] font-extrabold uppercase ${
+                    user?.role === 'AUTHORITY' ? 'text-accent' : user?.role === 'NGO' ? 'text-warning' : 'text-text-muted'
+                  }`}>
+                    {user?.role}
+                  </span>
                 </div>
               </Link>
 
