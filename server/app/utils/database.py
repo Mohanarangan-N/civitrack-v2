@@ -1,4 +1,9 @@
 import os
+try:
+    import certifi
+    CA_FILE = certifi.where()
+except Exception:
+    CA_FILE = None
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 
@@ -13,7 +18,10 @@ async def connect_db():
     uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     db_name = os.getenv("DB_NAME", "civitrack_v2")
     try:
-        client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=2000)
+        kwargs = {"serverSelectionTimeoutMS": 4000}
+        if CA_FILE and ("mongodb+srv://" in uri or "ssl=true" in uri or "tls=true" in uri):
+            kwargs["tlsCAFile"] = CA_FILE
+        client = AsyncIOMotorClient(uri, **kwargs)
         await client.admin.command("ping")
         _client = client
         _db = _client[db_name]
