@@ -61,18 +61,18 @@ export const FeedPage: React.FC = () => {
       <StoryRing stories={stories} userWard={user?.ward} onStoryAdded={loadData} />
 
       {/* Filter Bar */}
-      <div className="card p-3 mb-6 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2 font-semibold text-text-muted">
+      <div className="card p-3.5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-md">
+        <div className="flex items-center gap-2 font-bold text-text-muted">
           <Filter size={14} className="text-accent" />
-          Filter Feed:
+          <span>Filter Civic Feed:</span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {/* Ward Select */}
           <select
             value={selectedWard}
             onChange={(e) => setSelectedWard(e.target.value)}
-            className="bg-bg border border-primary/30 rounded-lg px-2.5 py-1.5 text-text-primary text-xs focus:outline-none focus:border-accent"
+            className="flex-1 sm:flex-none bg-bg border border-primary/30 rounded-xl px-3 py-2 text-text-primary text-xs font-semibold focus:outline-none focus:border-accent"
           >
             <option value="">All Wards ({WARDS.length})</option>
             {WARDS.map((w) => (
@@ -86,7 +86,7 @@ export const FeedPage: React.FC = () => {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-bg border border-primary/30 rounded-lg px-2.5 py-1.5 text-text-primary text-xs focus:outline-none focus:border-accent"
+            className="flex-1 sm:flex-none bg-bg border border-primary/30 rounded-xl px-3 py-2 text-text-primary text-xs font-semibold focus:outline-none focus:border-accent"
           >
             <option value="">All Categories</option>
             {Object.entries(CATEGORY_CONFIG).map(([key, cfg]) => (

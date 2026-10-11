@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { usersAPI } from '@/api';
 import type { User, Issue } from '@/types';
 import { EcoScoreWidget } from '@/components/gamification/EcoScoreWidget';
@@ -11,38 +11,66 @@ import { useAuthStore } from '@/store/authStore';
 
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [profileUser, setProfileUser] = useState<User | null>(null);
-  const [userIssues, setUserIssues] = useState<Issue[]>([]);
-  const [loading, setLoading] = useState(true);
-
   const { user: currentUser } = useAuthStore();
   const userId = id || currentUser?.id;
+  const isOwnProfile = !id || (!!currentUser && id === currentUser.id);
+
+  const [profileUser, setProfileUser] = useState<User | null>(
+    isOwnProfile && currentUser ? currentUser : null
+  );
+  const [userIssues, setUserIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(!currentUser && !profileUser);
 
   useEffect(() => {
     async function loadProfile() {
-      if (!userId) return;
+      if (!userId) {
+        if (currentUser) setProfileUser(currentUser);
+        setLoading(false);
+        return;
+      }
       try {
         const [userData, issuesData] = await Promise.all([
-          usersAPI.getProfile(userId),
-          usersAPI.getIssues(userId),
+          usersAPI.getProfile(userId).catch(() => null),
+          usersAPI.getIssues(userId).catch(() => ({ issues: [] })),
         ]);
-        setProfileUser(userData);
-        setUserIssues(issuesData.issues || []);
+        if (userData) {
+          setProfileUser(userData);
+        } else if (isOwnProfile && currentUser) {
+          setProfileUser(currentUser);
+        } else if (!profileUser && currentUser) {
+          setProfileUser(currentUser);
+        }
+        setUserIssues(issuesData?.issues || []);
       } catch (err) {
         console.error(err);
+        if (isOwnProfile && currentUser) {
+          setProfileUser(currentUser);
+        }
       } finally {
         setLoading(false);
       }
     }
     loadProfile();
-  }, [userId]);
+  }, [userId, currentUser, isOwnProfile]);
 
-  if (loading) {
+  if (loading && !profileUser) {
     return <div className="max-w-4xl mx-auto px-4 py-16 text-center text-text-muted">Loading profile...</div>;
   }
 
   if (!profileUser) {
-    return <div className="max-w-4xl mx-auto px-4 py-16 text-center text-text-muted">User not found</div>;
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-4">
+        <p className="text-text-muted">User profile not found.</p>
+        {currentUser && (
+          <button
+            onClick={() => setProfileUser(currentUser)}
+            className="px-4 py-2 rounded-xl bg-accent text-white text-xs font-bold"
+          >
+            Load My Profile
+          </button>
+        )}
+      </div>
+    );
   }
 
   const allBadgeKeys = Object.keys(ACHIEVEMENT_CONFIG);
@@ -90,28 +118,28 @@ export const ProfilePage: React.FC = () => {
           {currentUser?.id === profileUser.id && (
             <div className="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
               {profileUser.role === 'AUTHORITY' && (
-                <a
-                  href="/authority"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/20 border border-accent/40 text-accent hover:bg-accent/30 text-xs font-bold transition-all"
+                <Link
+                  to="/authority"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-accent/20 border border-accent/40 text-accent hover:bg-accent/30 text-xs font-bold transition-all shadow-sm"
                 >
                   <span>🏛️ Access Authority Decision Support Center →</span>
-                </a>
+                </Link>
               )}
               {profileUser.role === 'NGO' && (
-                <a
-                  href="/ngo"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning/20 border border-warning/40 text-warning hover:bg-warning/30 text-xs font-bold transition-all"
+                <Link
+                  to="/ngo"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-warning/20 border border-warning/40 text-warning hover:bg-warning/30 text-xs font-bold transition-all shadow-sm"
                 >
                   <span>🛡️ Access NGO Field Verification Queue →</span>
-                </a>
+                </Link>
               )}
               {profileUser.role === 'CITIZEN' && (
-                <a
-                  href="/report"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent hover:bg-primary-light text-white text-xs font-bold transition-all shadow-md shadow-accent/20"
+                <Link
+                  to="/report"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent hover:bg-primary-light text-white text-xs font-bold transition-all shadow-md shadow-accent/20"
                 >
                   <span>+ Report New Issue →</span>
-                </a>
+                </Link>
               )}
             </div>
           )}

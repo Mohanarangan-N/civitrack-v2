@@ -59,35 +59,35 @@ export const PostCard: React.FC<PostCardProps> = ({ issue, onLikeToggle }) => {
   return (
     <article className="card hover:border-primary/40 transition-all duration-300 mb-5 overflow-hidden group shadow-xl bg-bg-surface/95 border border-primary/20 rounded-3xl">
       {/* Post Header */}
-      <div className="flex items-center justify-between p-4 pb-3 border-b border-primary/10">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-accent/30 to-primary/40 border border-primary/40 flex items-center justify-center font-black text-accent text-base shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 pb-3 border-b border-primary/10">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-accent/30 to-primary/40 border border-primary/40 flex items-center justify-center font-black text-accent text-base shadow-sm shrink-0">
             {issue.is_anonymous ? '🎭' : (issue.reporter_name || 'C').charAt(0).toUpperCase()}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm text-text-primary">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-extrabold text-sm text-text-primary truncate">
                 {issue.is_anonymous ? 'Anonymous Citizen 🎭' : (issue.reporter_name || 'Citizen Reporter')}
               </span>
               {issue.is_anonymous && (
-                <span className="text-[9px] bg-primary/20 text-accent font-bold px-1.5 py-0.5 rounded-full border border-primary/30">
+                <span className="text-[9px] bg-primary/20 text-accent font-bold px-1.5 py-0.5 rounded-full border border-primary/30 shrink-0">
                   Zero-Knowledge
                 </span>
               )}
             </div>
             <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
-              <span className="flex items-center gap-1 font-semibold text-text-secondary">
-                <MapPin size={11} className="text-accent" />
+              <span className="flex items-center gap-1 font-semibold text-text-secondary truncate">
+                <MapPin size={11} className="text-accent shrink-0" />
                 {issue.ward} Ward
               </span>
               <span>•</span>
-              <span className="font-mono text-[11px] text-accent/90">{timeAgo(issue.created_at)}</span>
+              <span className="font-mono text-[11px] text-accent/90 shrink-0">{timeAgo(issue.created_at)}</span>
             </div>
           </div>
         </div>
 
         {/* Status Badge */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 self-start sm:self-center shrink-0">
           <span className={status.className}>{status.label}</span>
           <span
             className="badge font-black text-[11px]"

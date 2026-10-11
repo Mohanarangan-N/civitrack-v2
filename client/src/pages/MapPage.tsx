@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { mapAPI } from '@/api';
 import type { MapPin } from '@/types';
 import { PuducherryMap } from '@/components/map/PuducherryMap';
 import { WARDS, CATEGORY_CONFIG, PRIORITY_CONFIG } from '@/utils/constants';
 import { PUDUCHERRY_AUTHENTIC_PINS, PUDUCHERRY_WARDS_GEOJSON } from '@/utils/mapFallbacks';
-import { Filter, Flame, Layers, MapPin as MapPinIcon, AlertTriangle, Radio, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Filter, Flame, Layers, MapPin as MapPinIcon, AlertTriangle, Radio, RefreshCw, CheckCircle2, X, ArrowRight } from 'lucide-react';
 
 export const MapPage: React.FC = () => {
   const [pins, setPins] = useState<MapPin[]>(PUDUCHERRY_AUTHENTIC_PINS);
@@ -16,6 +17,7 @@ export const MapPage: React.FC = () => {
   const [selectedWard, setSelectedWard] = useState<string>('');
   const [selectedPin, setSelectedPin] = useState<MapPin | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   async function loadMapData() {
     setLoading(true);
@@ -58,10 +60,10 @@ export const MapPage: React.FC = () => {
   const criticalCount = filteredPins.filter((p) => p.priority === 'CRITICAL').length;
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row overflow-hidden bg-bg">
+    <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row overflow-hidden bg-bg relative">
       
-      {/* Sidebar Filter Panel */}
-      <aside className="w-full md:w-80 bg-bg-surface border-r border-primary/20 p-4 flex flex-col gap-4 flex-shrink-0 overflow-y-auto">
+      {/* ═══ DESKTOP SIDEBAR FILTER PANEL (Hidden on Mobile) ═══ */}
+      <aside className="hidden md:flex w-80 bg-bg-surface border-r border-primary/20 p-4 flex-col gap-4 flex-shrink-0 overflow-y-auto">
         <div>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-extrabold text-text-primary flex items-center gap-2">
@@ -115,7 +117,7 @@ export const MapPage: React.FC = () => {
             <Flame size={16} />
             Hotspot Heatmap Overlay
           </span>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/40">
+          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/40 font-mono">
             {showHeatmap ? 'ON' : 'OFF'}
           </span>
         </button>
@@ -135,7 +137,7 @@ export const MapPage: React.FC = () => {
               All ({pins.length})
             </button>
             <button
-              onClick={() => { setSelectedPriority('CRITICAL'); setSelectedCategory(''); }}
+              onClick={() => { setSelectedPriority(selectedPriority === 'CRITICAL' ? '' : 'CRITICAL'); setSelectedCategory(''); }}
               className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
                 selectedPriority === 'CRITICAL'
                   ? 'bg-danger text-white shadow-sm'
@@ -145,7 +147,7 @@ export const MapPage: React.FC = () => {
               🔴 Critical
             </button>
             <button
-              onClick={() => { setSelectedCategory('ROADS'); setSelectedPriority(''); }}
+              onClick={() => { setSelectedCategory(selectedCategory === 'ROADS' ? '' : 'ROADS'); setSelectedPriority(''); }}
               className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
                 selectedCategory === 'ROADS'
                   ? 'bg-accent text-white shadow-sm'
@@ -155,7 +157,7 @@ export const MapPage: React.FC = () => {
               🛣️ Roads
             </button>
             <button
-              onClick={() => { setSelectedCategory('WATER'); setSelectedPriority(''); }}
+              onClick={() => { setSelectedCategory(selectedCategory === 'WATER' ? '' : 'WATER'); setSelectedPriority(''); }}
               className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
                 selectedCategory === 'WATER'
                   ? 'bg-accent text-white shadow-sm'
@@ -165,7 +167,7 @@ export const MapPage: React.FC = () => {
               💧 Water
             </button>
             <button
-              onClick={() => { setSelectedCategory('WASTE'); setSelectedPriority(''); }}
+              onClick={() => { setSelectedCategory(selectedCategory === 'WASTE' ? '' : 'WASTE'); setSelectedPriority(''); }}
               className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
                 selectedCategory === 'WASTE'
                   ? 'bg-accent text-white shadow-sm'
@@ -221,9 +223,9 @@ export const MapPage: React.FC = () => {
           </select>
         </div>
 
-        {/* Selected Marker Preview Box */}
+        {/* Desktop Selected Marker Preview Box */}
         {selectedPin && (
-          <div className="mt-auto p-4 bg-bg-elevated border border-accent/40 rounded-xl text-xs space-y-2 animate-slide-up">
+          <div className="mt-auto p-4 bg-bg-elevated border border-accent/40 rounded-xl text-xs space-y-2 animate-slide-up shadow-lg">
             <div className="flex items-center justify-between font-bold text-accent">
               <span>{CATEGORY_CONFIG[selectedPin.category]?.emoji} {selectedPin.category}</span>
               <span className={`px-2 py-0.5 rounded text-[10px] ${
@@ -232,13 +234,216 @@ export const MapPage: React.FC = () => {
               }`}>{selectedPin.priority}</span>
             </div>
             <h4 className="font-bold text-text-primary text-sm line-clamp-2">{selectedPin.title}</h4>
-            <p className="text-text-muted text-[11px]">Ward: <strong>{selectedPin.ward}</strong></p>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-text-muted text-[11px]">Ward: <strong>{selectedPin.ward}</strong></span>
+              <Link to={`/issues/${selectedPin.id}`} className="text-accent hover:underline font-bold flex items-center gap-1">
+                Details <ArrowRight size={12} />
+              </Link>
+            </div>
           </div>
         )}
       </aside>
 
-      {/* Main Leaflet Map View */}
-      <main className="flex-1 h-full p-4 relative">
+      {/* ═══ MOBILE TOP FLOATING FILTER BAR ═══ */}
+      <div className="md:hidden absolute top-3 left-3 right-3 z-30 flex items-center gap-2 pointer-events-none">
+        {/* Horizontal Quick Focus Scrolling Pills */}
+        <div className="flex-1 flex items-center gap-1.5 overflow-x-auto py-1 px-2.5 rounded-2xl bg-bg-surface/90 backdrop-blur-xl border border-primary/30 shadow-xl pointer-events-auto scrollbar-none">
+          <button
+            onClick={() => { setSelectedCategory(''); setSelectedPriority(''); setSelectedWard(''); }}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              !selectedCategory && !selectedPriority && !selectedWard
+                ? 'bg-accent text-white shadow-md'
+                : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            All ({filteredPins.length})
+          </button>
+          <button
+            onClick={() => setSelectedPriority(selectedPriority === 'CRITICAL' ? '' : 'CRITICAL')}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              selectedPriority === 'CRITICAL'
+                ? 'bg-danger text-white shadow-md'
+                : 'text-danger hover:bg-danger/10'
+            }`}
+          >
+            🔴 Critical
+          </button>
+          <button
+            onClick={() => setSelectedCategory(selectedCategory === 'ROADS' ? '' : 'ROADS')}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              selectedCategory === 'ROADS'
+                ? 'bg-accent text-white shadow-md'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            🛣️ Roads
+          </button>
+          <button
+            onClick={() => setSelectedCategory(selectedCategory === 'WATER' ? '' : 'WATER')}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              selectedCategory === 'WATER'
+                ? 'bg-accent text-white shadow-md'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            💧 Water
+          </button>
+          <button
+            onClick={() => setSelectedCategory(selectedCategory === 'WASTE' ? '' : 'WASTE')}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              selectedCategory === 'WASTE'
+                ? 'bg-accent text-white shadow-md'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            🗑️ Waste
+          </button>
+        </div>
+
+        {/* Heatmap Toggle Button */}
+        <button
+          onClick={() => setShowHeatmap(!showHeatmap)}
+          className={`p-2.5 rounded-2xl border shadow-xl pointer-events-auto transition-all ${
+            showHeatmap
+              ? 'bg-warning text-black border-warning shadow-warning/30'
+              : 'bg-bg-surface/90 backdrop-blur-xl border-primary/30 text-text-secondary'
+          }`}
+          title="Toggle Heatmap"
+        >
+          <Flame size={16} />
+        </button>
+
+        {/* More Filters Toggle */}
+        <button
+          onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
+          className={`p-2.5 rounded-2xl border shadow-xl pointer-events-auto transition-all ${
+            mobileDrawerOpen || selectedWard
+              ? 'bg-accent text-white border-accent shadow-accent/30'
+              : 'bg-bg-surface/90 backdrop-blur-xl border-primary/30 text-text-secondary'
+          }`}
+          title="Filter by Ward & Priority"
+        >
+          <Filter size={16} />
+        </button>
+      </div>
+
+      {/* ═══ MOBILE FILTER MODAL / DRAWER ═══ */}
+      {mobileDrawerOpen && (
+        <div className="md:hidden absolute inset-x-3 top-16 z-40 bg-bg-surface/95 backdrop-blur-2xl border border-primary/30 rounded-3xl p-5 shadow-2xl animate-slide-up space-y-4">
+          <div className="flex items-center justify-between border-b border-primary/20 pb-3">
+            <span className="font-extrabold text-sm text-text-primary flex items-center gap-2">
+              <Filter size={16} className="text-accent" /> Filter Map Issues
+            </span>
+            <button
+              onClick={() => setMobileDrawerOpen(false)}
+              className="p-1 rounded-lg hover:bg-primary/20 text-text-muted"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="space-y-3 text-xs">
+            <div>
+              <label className="block text-[11px] font-bold text-text-muted uppercase mb-1">Ward Area</label>
+              <select
+                value={selectedWard}
+                onChange={(e) => setSelectedWard(e.target.value)}
+                className="input-field text-xs"
+              >
+                <option value="">All 10 Puducherry Wards</option>
+                {WARDS.map((w) => (
+                  <option key={w} value={w}>{w} Ward</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-text-muted uppercase mb-1">Category</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="input-field text-xs"
+              >
+                <option value="">All Categories ({pins.length})</option>
+                {Object.entries(CATEGORY_CONFIG).map(([catKey, cfg]) => (
+                  <option key={catKey} value={catKey}>{cfg.emoji} {cfg.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-text-muted uppercase mb-1">Priority</label>
+              <select
+                value={selectedPriority}
+                onChange={(e) => setSelectedPriority(e.target.value)}
+                className="input-field text-xs font-semibold"
+              >
+                <option value="">All Priorities</option>
+                <option value="CRITICAL">🔴 CRITICAL</option>
+                <option value="HIGH">🟠 HIGH</option>
+                <option value="MEDIUM">🟡 MEDIUM</option>
+                <option value="LOW">🟢 LOW</option>
+              </select>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => { setSelectedCategory(''); setSelectedPriority(''); setSelectedWard(''); setMobileDrawerOpen(false); }}
+                className="btn-secondary flex-1 py-2.5 text-xs font-bold"
+              >
+                Reset All
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(false)}
+                className="btn-primary flex-1 py-2.5 text-xs font-bold"
+              >
+                Apply Filters ({filteredPins.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ MOBILE BOTTOM PIN SELECTION CARD ═══ */}
+      {selectedPin && (
+        <div className="md:hidden absolute inset-x-3 bottom-24 z-40 bg-bg-surface/95 backdrop-blur-2xl border border-accent/40 rounded-3xl p-4 shadow-2xl animate-slide-up">
+          <div className="flex items-center justify-between pb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">{CATEGORY_CONFIG[selectedPin.category]?.emoji}</span>
+              <span className="font-extrabold text-xs text-accent uppercase">{selectedPin.category}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                selectedPin.priority === 'CRITICAL' ? 'bg-danger/20 text-danger border border-danger/40' :
+                selectedPin.priority === 'HIGH' ? 'bg-warning/20 text-warning border border-warning/40' : 'bg-success/20 text-success border border-success/40'
+              }`}>
+                {selectedPin.priority}
+              </span>
+              <button onClick={() => setSelectedPin(null)} className="p-1 rounded-lg text-text-muted hover:text-white">
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+
+          <h4 className="font-extrabold text-sm text-text-primary line-clamp-2 mb-1">{selectedPin.title}</h4>
+          <p className="text-xs text-text-muted mb-3 flex items-center gap-1">
+            <MapPinIcon size={12} className="text-accent" /> {selectedPin.ward} Ward
+          </p>
+
+          <Link
+            to={`/issues/${selectedPin.id}`}
+            className="btn-primary w-full py-2.5 text-center text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-accent/25"
+          >
+            <span>View Full Civic Report</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
+
+      {/* ═══ MAIN LEAFLET MAP VIEW ═══ */}
+      <main className="flex-1 h-full p-0 sm:p-4 relative">
         <PuducherryMap
           pins={filteredPins}
           wardBoundaries={wardBoundaries}
@@ -250,3 +455,5 @@ export const MapPage: React.FC = () => {
     </div>
   );
 };
+
+export default MapPage;

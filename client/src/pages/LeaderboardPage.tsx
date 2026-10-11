@@ -76,10 +76,10 @@ export const LeaderboardPage: React.FC = () => {
               return (
                 <div
                   key={user.id}
-                  className="p-4 flex items-center justify-between hover:bg-primary/10 transition-colors"
+                  className="p-3 sm:p-4 flex items-center justify-between gap-3 hover:bg-primary/10 transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-8 text-center font-extrabold text-sm">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-7 sm:w-8 text-center font-extrabold text-sm shrink-0">
                       {user.rank === 1 ? (
                         <span className="text-yellow-400 text-lg">🥇</span>
                       ) : user.rank === 2 ? (
@@ -87,25 +87,25 @@ export const LeaderboardPage: React.FC = () => {
                       ) : user.rank === 3 ? (
                         <span className="text-amber-600 text-lg">🥉</span>
                       ) : (
-                        <span className="text-text-muted">#{user.rank}</span>
+                        <span className="text-text-muted text-xs">#{user.rank}</span>
                       )}
                     </div>
 
-                    <div className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center font-bold text-accent">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center font-bold text-accent shrink-0 text-sm">
                       {user.name.charAt(0)}
                     </div>
 
-                    <div>
-                      <h4 className="font-bold text-sm text-text-primary">{user.name}</h4>
-                      <span className="text-[11px] text-text-muted">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-sm text-text-primary truncate">{user.name}</h4>
+                      <span className="text-[11px] text-text-muted truncate block">
                         {user.ward} Ward • {levelCfg.icon} {user.level}
                       </span>
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <span className="text-lg font-black text-accent block">{user.eco_score}</span>
-                    <span className="text-[10px] text-text-muted">pts</span>
+                  <div className="text-right shrink-0">
+                    <span className="text-base sm:text-lg font-black text-accent block">{user.eco_score}</span>
+                    <span className="text-[9px] text-text-muted block uppercase">pts</span>
                   </div>
                 </div>
               );

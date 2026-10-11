@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { analyticsAPI } from '@/api';
-import type { AnalyticsSummary, MonthlyData, CategoryData, WardData, SLAItem } from '@/types';
+import { Link } from 'react-router-dom';
+import { analyticsAPI, issuesAPI } from '@/api';
+import type { AnalyticsSummary, MonthlyData, CategoryData, WardData, SLAItem, Issue } from '@/types';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { SLATracker } from '@/components/dashboard/SLATracker';
-import { CATEGORY_CONFIG } from '@/utils/constants';
+import { CATEGORY_CONFIG, PRIORITY_CONFIG } from '@/utils/constants';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, LineChart, Line, Legend 
 } from 'recharts';
 import { 
   Shield, Download, CheckCircle, Clock, AlertTriangle, Activity, 
-  FileSpreadsheet, TrendingDown, Zap, Target, CheckCircle2, Sparkles
+  FileSpreadsheet, TrendingDown, Zap, Target, CheckCircle2, Sparkles,
+  Truck, Wrench, ExternalLink, MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
@@ -18,6 +20,8 @@ import toast from 'react-hot-toast';
 const COLORS = ['#22A66A', '#3B9ED4', '#E8901A', '#E8D61A', '#9B59B6', '#1ABC9C', '#E85038', '#95A5A6'];
 
 export const AuthorityDashboard: React.FC = () => {
+  const [actionIssues, setActionIssues] = useState<Issue[]>([]);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [summary, setSummary] = useState<AnalyticsSummary | null>({
     total: 25,
     pending: 3,
@@ -58,16 +62,25 @@ export const AuthorityDashboard: React.FC = () => {
   const [selectedPreventionCat, setSelectedPreventionCat] = useState<string>('ROADS');
   const [loading, setLoading] = useState(false);
 
+  const refreshActionQueue = async () => {
+    try {
+      const issuesRes = await issuesAPI.getAll().catch(() => ({ issues: [] }));
+      const allIssues: Issue[] = issuesRes?.issues || (Array.isArray(issuesRes) ? issuesRes : []);
+      setActionIssues(allIssues.filter((i: Issue) => i.status === 'VERIFIED' || i.status === 'IN_PROGRESS'));
+    } catch { /* ignore */ }
+  };
+
   useEffect(() => {
     async function loadAnalytics() {
       try {
-        const [sumRes, monRes, catRes, wardRes, slaRes, prevRes] = await Promise.all([
+        const [sumRes, monRes, catRes, wardRes, slaRes, prevRes, issuesRes] = await Promise.all([
           analyticsAPI.getSummary().catch(() => null),
           analyticsAPI.getMonthly().catch(() => null),
           analyticsAPI.getCategory().catch(() => null),
           analyticsAPI.getWards().catch(() => null),
           analyticsAPI.getSLA().catch(() => null),
           analyticsAPI.getPreventativeInsights().catch(() => null),
+          issuesAPI.getAll().catch(() => ({ issues: [] })),
         ]);
         if (sumRes) setSummary(sumRes);
         if (monRes?.length) setMonthly(monRes);
@@ -75,12 +88,47 @@ export const AuthorityDashboard: React.FC = () => {
         if (wardRes?.length) setWardData(wardRes);
         if (slaRes?.length) setSlaItems(slaRes);
         if (prevRes) setPreventionData(prevRes);
+
+        const allIssues: Issue[] = issuesRes?.issues || (Array.isArray(issuesRes) ? issuesRes : []);
+        setActionIssues(allIssues.filter((i: Issue) => i.status === 'VERIFIED' || i.status === 'IN_PROGRESS'));
       } catch (err) {
         console.error(err);
       }
     }
     loadAnalytics();
   }, []);
+
+  const handleDispatch = async (issueId: string) => {
+    setUpdatingId(issueId);
+    try {
+      await issuesAPI.updateStatus(issueId, {
+        status: 'IN_PROGRESS',
+        note: 'Municipal Works Department dispatched repair crew and contractor team.',
+      });
+      toast.success('🚜 Work Order Dispatched! Citizen & Ward notified.');
+      await refreshActionQueue();
+    } catch {
+      toast.error('Failed to dispatch work order');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleResolve = async (issueId: string) => {
+    setUpdatingId(issueId);
+    try {
+      await issuesAPI.updateStatus(issueId, {
+        status: 'RESOLVED',
+        note: 'Municipal repair completed on-site. Infrastructure restored.',
+      });
+      toast.success('✅ Marked Resolved! Citizen alerted to confirm resolution (+50 pts).');
+      await refreshActionQueue();
+    } catch {
+      toast.error('Failed to mark resolved');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const handleExportCSV = () => {
     if (!slaItems.length) {
@@ -208,6 +256,116 @@ ACTION ROADMAP BY DOMAIN:
           />
         </div>
       )}
+
+      {/* MUNICIPAL WORK ORDER DISPATCH & ACTION COMMAND QUEUE */}
+      <div className="card p-6 border-2 border-accent/40 bg-bg-surface space-y-4 shadow-xl">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-primary/20">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold text-accent uppercase tracking-wider mb-1">
+              <Truck size={16} />
+              <span>Verified Civic Queue Awaiting Municipal Action</span>
+            </div>
+            <h2 className="text-lg sm:text-xl font-extrabold text-text-primary">
+              Work Order Dispatch & Contractor Assignment ({actionIssues.length})
+            </h2>
+            <p className="text-xs text-text-muted">
+              Issues verified by Ward NGOs ready for contractor mobilization and status progression.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-accent/20 text-accent border border-accent/30">
+              {actionIssues.filter(i => i.status === 'VERIFIED').length} Pending Dispatch
+            </span>
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-warning/20 text-warning border border-warning/30">
+              {actionIssues.filter(i => i.status === 'IN_PROGRESS').length} Active In-Field
+            </span>
+          </div>
+        </div>
+
+        {actionIssues.length === 0 ? (
+          <div className="p-8 text-center text-xs text-text-muted rounded-xl bg-bg-elevated border border-primary/10">
+            No verified issues currently awaiting municipal work order dispatch. All caught up!
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-4">
+            {actionIssues.map((issue) => {
+              const catCfg = CATEGORY_CONFIG[issue.category] || CATEGORY_CONFIG.OTHER;
+              const isUpdating = updatingId === issue.id;
+
+              return (
+                <div
+                  key={issue.id}
+                  className="p-4 rounded-2xl bg-bg-elevated border border-primary/20 hover:border-accent/40 transition-all flex flex-col justify-between gap-3 shadow-md"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">{catCfg.emoji}</span>
+                        <span className="text-[11px] font-bold text-accent px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20">
+                          {catCfg.label}
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase border ${
+                        issue.priority === 'CRITICAL' ? 'bg-danger/20 text-danger border-danger/40' :
+                        issue.priority === 'HIGH' ? 'bg-warning/20 text-warning border-warning/40' :
+                        'bg-accent/20 text-accent border-accent/40'
+                      }`}>
+                        {issue.priority} Priority
+                      </span>
+                    </div>
+
+                    <h4 className="text-sm font-bold text-text-primary line-clamp-1">{issue.title}</h4>
+                    <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">
+                      {issue.description}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-text-muted pt-1">
+                      <span className="flex items-center gap-1 font-semibold text-text-primary">
+                        <MapPin size={12} className="text-accent" /> {issue.ward} Ward
+                      </span>
+                      <span className="text-text-muted">•</span>
+                      <span className="font-mono">Status: <strong className="text-accent">{issue.status}</strong></span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="pt-2 border-t border-primary/10 flex items-center justify-between gap-2">
+                    <Link
+                      to={`/issues/${issue.id}`}
+                      className="text-[11px] text-text-muted hover:text-accent font-semibold flex items-center gap-1"
+                    >
+                      <span>View Details</span> <ExternalLink size={12} />
+                    </Link>
+
+                    <div className="flex items-center gap-2">
+                      {issue.status === 'VERIFIED' && (
+                        <button
+                          disabled={isUpdating}
+                          onClick={() => handleDispatch(issue.id)}
+                          className="px-3 py-1.5 rounded-xl bg-accent hover:bg-primary-light text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-accent/20 disabled:opacity-50 active:scale-95"
+                        >
+                          <Truck size={13} /> {isUpdating ? 'Dispatching...' : 'Dispatch Crew'}
+                        </button>
+                      )}
+
+                      {issue.status === 'IN_PROGRESS' && (
+                        <button
+                          disabled={isUpdating}
+                          onClick={() => handleResolve(issue.id)}
+                          className="px-3 py-1.5 rounded-xl bg-success hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-success/20 disabled:opacity-50 active:scale-95"
+                        >
+                          <CheckCircle2 size={13} /> {isUpdating ? 'Updating...' : 'Mark Resolved'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Recharts Analytics Section */}
       <div className="grid lg:grid-cols-2 gap-6">

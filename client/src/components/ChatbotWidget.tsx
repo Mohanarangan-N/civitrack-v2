@@ -68,20 +68,20 @@ export const ChatbotWidget: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-50">
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="w-14 h-14 rounded-full bg-accent hover:bg-primary-light text-white shadow-xl shadow-accent/30 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group"
+          className="w-13 h-13 sm:w-14 sm:h-14 p-3 rounded-full bg-accent hover:bg-primary-light text-white shadow-2xl shadow-accent/40 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group border-2 border-white/20"
           title="Ask CiviBot AI Assistant"
         >
-          <Bot className="w-7 h-7 group-hover:rotate-12 transition-transform" />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary border-2 border-bg rounded-full animate-ping" />
+          <Bot className="w-6 h-6 sm:w-7 sm:h-7 group-hover:rotate-12 transition-transform" />
+          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-bg rounded-full animate-ping" />
         </button>
       )}
 
       {isOpen && (
-        <div className="bg-bg-surface border border-primary/30 rounded-2xl w-80 sm:w-96 h-[480px] shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+        <div className="bg-bg-surface border border-primary/30 rounded-3xl w-[calc(100vw-2rem)] sm:w-96 max-w-sm h-[480px] max-h-[75vh] shadow-2xl flex flex-col overflow-hidden animate-slide-up">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-accent p-4 flex items-center justify-between text-white">
             <div className="flex items-center gap-2.5">

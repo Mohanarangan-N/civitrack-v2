@@ -4,6 +4,7 @@ import type {
   AnalyticsSummary, MonthlyData, CategoryData, WardData, SLAItem
 } from '@/types';
 import { PUDUCHERRY_AUTHENTIC_PINS } from '@/utils/mapFallbacks';
+import { useAuthStore } from '@/store/authStore';
 
 // ─── Predefined Demo Accounts ──────────────────────────────────────────────────
 export const PREDEFINED_USERS: Record<string, { user: User; passwordHash: string }> = {
@@ -211,6 +212,89 @@ function saveIssues(issues: Issue[]) {
   } catch (e) {
     console.warn('LocalStorage saveIssues error', e);
   }
+}
+
+interface StoredNotification {
+  id: string;
+  user_id?: string;
+  role?: string;
+  ward?: string;
+  title: string;
+  message: string;
+  issue_id?: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+function getStoredNotifications(): StoredNotification[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn('LocalStorage getStoredNotifications error', e);
+  }
+  const defaultNotifs: StoredNotification[] = [
+    {
+      id: 'notif-seed-1',
+      user_id: 'usr-ngo-01',
+      role: 'NGO',
+      ward: 'White Town',
+      title: '🚨 Pending Inspection in White Town',
+      message: 'Citizen reported road pavement crater near Goubert Avenue. Verification needed.',
+      is_read: false,
+      created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    },
+    {
+      id: 'notif-seed-2',
+      user_id: 'usr-auth-01',
+      role: 'AUTHORITY',
+      ward: 'Lawspet',
+      title: '🏛️ Verified Issue Awaiting Work Order',
+      message: 'NGO verified Airport Road Potholes. Ready for Municipal contractor dispatch.',
+      is_read: false,
+      created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+    },
+    {
+      id: 'notif-seed-3',
+      user_id: 'usr-citizen-01',
+      role: 'CITIZEN',
+      title: '🎉 Report Verified! (+25 EcoScore)',
+      message: 'Your report regarding Airport Road Potholes was verified by Clean Pondy Trust.',
+      is_read: false,
+      created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+    },
+  ];
+  saveNotifications(defaultNotifs);
+  return defaultNotifs;
+}
+
+function saveNotifications(notifs: StoredNotification[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifs));
+  } catch (e) {
+    console.warn('LocalStorage saveNotifications error', e);
+  }
+}
+
+export function addNotification(notif: Omit<StoredNotification, 'id' | 'created_at'> & { id?: string; created_at?: string }) {
+  const current = getStoredNotifications();
+  const newNotif: StoredNotification = {
+    id: notif.id || `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    user_id: notif.user_id,
+    role: notif.role,
+    ward: notif.ward,
+    title: notif.title,
+    message: notif.message,
+    issue_id: notif.issue_id,
+    is_read: notif.is_read ?? false,
+    created_at: notif.created_at || new Date().toISOString(),
+  };
+  current.unshift(newNotif);
+  saveNotifications(current);
+  return newNotif;
 }
 
 // ─── TF-IDF / Keyword AI Classifier ────────────────────────────────────────────
@@ -439,11 +523,33 @@ export function handleMockRequest(config: any): any | null {
 
   // 7. ML Image Validation (/ml/validate-image)
   if (path.includes('/ml/validate-image') && method === 'post') {
+    const body = typeof config.data === 'string' ? JSON.parse(config.data || '{}') : (config.data || {});
+    const cat = (body.category || 'ROADS').toUpperCase();
+    const sceneDetected =
+      cat === 'ROADS' ? 'Road Pothole & Surface Distress' :
+      cat === 'WASTE' ? 'Public Waste Accumulation' :
+      cat === 'WATER' ? 'Water Leakage / Drainage Overflow' :
+      cat === 'LIGHTING' ? 'Civic Lighting / Power Asset' :
+      cat === 'PARKS' ? 'Public Park & Vegetation Zone' :
+      'Authentic Civic Infrastructure Hazard Scene';
+
     return {
-      is_valid: true,
-      hazard_score: 0.88,
-      detected_hazard: 'Authentic municipal infrastructure wear / safety hazard verified',
-      confidence: 0.94,
+      valid: true,
+      evidence_score: 0.94,
+      severity_level: 'HIGH',
+      scene_detected: sceneDetected,
+      badge: 'AI Verified ✓',
+      summary: `Multimodal computer vision analyzed visual evidence: authentic localized ${cat.toLowerCase()} wear verified.`,
+      flag: null,
+      features: {
+        texture_roughness: 0.84,
+        edge_density: 0.76,
+        sharpness: 0.88,
+        luminance: 138,
+        dark_region_pct: 12.0,
+        color_variance: 44.2,
+        is_blurry: false,
+      },
     };
   }
 
@@ -498,6 +604,17 @@ export function handleMockRequest(config: any): any | null {
     issues.unshift(newIssue);
     saveIssues(issues);
 
+    // 🔔 SYNC: Notify Assigned Ward NGO
+    addNotification({
+      user_id: 'usr-ngo-01',
+      role: 'NGO',
+      ward: newIssue.ward,
+      title: `🚨 New Issue Reported in ${newIssue.ward}`,
+      message: `Citizen reported ${newIssue.category}: '${newIssue.title}'. Verification required before public dispatch.`,
+      issue_id: newIssue.id,
+      is_read: false,
+    });
+
     return {
       ...newIssue,
       tracking_token: `TRK-PUD-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -528,6 +645,49 @@ export function handleMockRequest(config: any): any | null {
         note: body.reason || (issue.status === 'VERIFIED' ? 'Verified on-site by Ward NGO Inspector.' : 'Rejected upon field inspection.'),
       });
       saveIssues(issues);
+
+      if (body.action === 'approve' || issue.status === 'VERIFIED') {
+        // 🔔 SYNC: Notify Municipal Authority to take action!
+        addNotification({
+          user_id: 'usr-auth-01',
+          role: 'AUTHORITY',
+          ward: issue.ward,
+          title: `🏛️ Action Required: Verified Issue in ${issue.ward}`,
+          message: `NGO verified ${issue.category}: '${issue.title}'. Ready for Work Order dispatch.`,
+          issue_id: issue.id,
+          is_read: false,
+        });
+
+        // 🔔 SYNC: Notify Citizen reporter (+25 EcoScore)
+        addNotification({
+          user_id: issue.reporter_id || 'usr-citizen-01',
+          role: 'CITIZEN',
+          title: `🎉 Issue Verified & Public (+25 EcoScore)`,
+          message: `Your report '${issue.title}' has been verified by Ward NGO and sent to Municipal Authority for dispatch!`,
+          issue_id: issue.id,
+          is_read: false,
+        });
+
+        // Award points in mock user store
+        try {
+          const users = getStoredUsers();
+          if (users['citizen@civitrack.in']) {
+            users['citizen@civitrack.in'].user.eco_score += 25;
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+          }
+        } catch { /* ignore */ }
+      } else {
+        // Rejection notification
+        addNotification({
+          user_id: issue.reporter_id || 'usr-citizen-01',
+          role: 'CITIZEN',
+          title: `⚠️ Issue Rejected by Inspector`,
+          message: `Your report '${issue.title}' was rejected: ${body.reason || 'Insufficient verification evidence.'}`,
+          issue_id: issue.id,
+          is_read: false,
+        });
+      }
+
       return issue;
     }
   }
@@ -550,6 +710,28 @@ export function handleMockRequest(config: any): any | null {
         note: body.note || `Status updated to ${issue.status} by Municipal Works Engineer.`,
       });
       saveIssues(issues);
+
+      // 🔔 SYNC: Notify Citizen of status update
+      if (issue.status === 'IN_PROGRESS') {
+        addNotification({
+          user_id: issue.reporter_id || 'usr-citizen-01',
+          role: 'CITIZEN',
+          title: `🚜 Work Order Dispatched`,
+          message: `Municipal Authority dispatched repair team for '${issue.title}'. Work is underway!`,
+          issue_id: issue.id,
+          is_read: false,
+        });
+      } else if (issue.status === 'RESOLVED') {
+        addNotification({
+          user_id: issue.reporter_id || 'usr-citizen-01',
+          role: 'CITIZEN',
+          title: `✅ Issue Resolved: Confirmation Required`,
+          message: `Municipal Authority completed repair for '${issue.title}'. Please verify and confirm resolution (+50 pts)!`,
+          issue_id: issue.id,
+          is_read: false,
+        });
+      }
+
       return issue;
     }
   }
@@ -562,6 +744,35 @@ export function handleMockRequest(config: any): any | null {
     if (issue) {
       issue.citizen_verified_resolved = true;
       saveIssues(issues);
+
+      // 🔔 SYNC: Notify Authority & NGO that Citizen confirmed completion
+      addNotification({
+        user_id: 'usr-auth-01',
+        role: 'AUTHORITY',
+        title: `🌟 Resolution Confirmed by Citizen`,
+        message: `Citizen verified that repair for '${issue.title}' was completed successfully. (+50 pts awarded)`,
+        issue_id: issue.id,
+        is_read: false,
+      });
+      addNotification({
+        user_id: 'usr-ngo-01',
+        role: 'NGO',
+        ward: issue.ward,
+        title: `🌟 Resolution Confirmed by Citizen`,
+        message: `Citizen verified that repair for '${issue.title}' in ${issue.ward} was completed successfully.`,
+        issue_id: issue.id,
+        is_read: false,
+      });
+
+      // Award points in mock user store
+      try {
+        const users = getStoredUsers();
+        if (users['citizen@civitrack.in']) {
+          users['citizen@civitrack.in'].user.eco_score += 50;
+          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+        }
+      } catch { /* ignore */ }
+
       return issue;
     }
   }
@@ -884,23 +1095,206 @@ export function handleMockRequest(config: any): any | null {
   }
 
   // 24. Notifications (/notifications)
-  if (path === '/notifications') {
-    return [
-      {
-        id: 'notif-1',
-        title: 'Report Verified! 🎉',
-        message: 'Your report regarding Airport Road Potholes was verified by Clean Pondy Trust.',
-        created_at: '10m ago',
-        is_read: false,
-      },
-      {
-        id: 'notif-2',
-        title: 'Work Order Dispatched 🚜',
-        message: 'Municipal Works Department dispatched a repair crew to Lawspet.',
-        created_at: '2h ago',
-        is_read: false,
-      },
-    ];
+  if (path === '/notifications' && method === 'get') {
+    const allNotifs = getStoredNotifications();
+    const currentUser = useAuthStore.getState().user;
+    const filtered = allNotifs.filter(n => {
+      if (!currentUser) return true;
+      if (n.user_id && (n.user_id === currentUser.id || n.user_id === currentUser.email)) return true;
+      if (n.role && n.role === currentUser.role) return true;
+      return !n.user_id && !n.role;
+    });
+    return {
+      notifications: filtered,
+      unread_count: filtered.filter(n => !n.is_read).length,
+    };
+  }
+
+  if (path === '/notifications/read-all' && method === 'patch') {
+    const allNotifs = getStoredNotifications();
+    const currentUser = useAuthStore.getState().user;
+    allNotifs.forEach(n => {
+      if (!currentUser || n.user_id === currentUser.id || n.role === currentUser.role) {
+        n.is_read = true;
+      }
+    });
+    saveNotifications(allNotifs);
+    return { success: true };
+  }
+
+  // 24b. Users: Get Profile (/users/:id)
+  if (path.startsWith('/users/') && !path.includes('/issues') && method === 'get') {
+    const targetId = path.split('/')[2];
+    const users = getStoredUsers();
+    const found = Object.values(users).find(u => u.user.id === targetId || u.user.email === targetId);
+    if (found) return found.user;
+
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser && (currentUser.id === targetId || currentUser.email === targetId || !targetId)) {
+      return currentUser;
+    }
+    return PREDEFINED_USERS['citizen@civitrack.in'].user;
+  }
+
+  // 24c. Users: Get Issues (/users/:id/issues)
+  if (path.startsWith('/users/') && path.endsWith('/issues') && method === 'get') {
+    const targetId = path.split('/')[2];
+    const issues = getStoredIssues();
+    const userIssues = issues.filter(i => 
+      !i.reporter_id || 
+      i.reporter_id === targetId || 
+      i.reporter_id === 'usr-citizen-01'
+    );
+    return { issues: userIssues, total: userIssues.length };
+  }
+
+  // 25. Developer Endpoints (/developer/...)
+  if (path.startsWith('/developer')) {
+    // 25a. Developer Logs
+    if (path.startsWith('/developer/logs')) {
+      if (method === 'delete') {
+        try { localStorage.removeItem('civitrack_dev_logs'); } catch { /* ignore */ }
+        return { message: 'Logs cleared' };
+      }
+      // GET logs
+      let storedLogs: any[] = [];
+      try {
+        const raw = localStorage.getItem('civitrack_dev_logs');
+        if (raw) storedLogs = JSON.parse(raw);
+      } catch { /* ignore */ }
+
+      if (!storedLogs || storedLogs.length === 0) {
+        storedLogs = [
+          {
+            id: 1,
+            timestamp: new Date().toISOString(),
+            function_name: 'ml_classifier.predict',
+            duration_ms: 18.4,
+            status: 'SUCCESS',
+            details: { input: 'Large pothole on Lawspet main road', category: 'ROADS', confidence: 0.95 },
+          },
+          {
+            id: 2,
+            timestamp: new Date(Date.now() - 45000).toISOString(),
+            function_name: 'priority.compute_score',
+            duration_ms: 1.2,
+            status: 'SUCCESS',
+            details: { score: 78, priority: 'CRITICAL', area_type: 'HIGHWAY', hectic_level: 'BUSY' },
+          },
+          {
+            id: 3,
+            timestamp: new Date(Date.now() - 120000).toISOString(),
+            function_name: 'vision.validate_image',
+            duration_ms: 142.6,
+            status: 'SUCCESS',
+            details: { scene: 'asphalt_structural_fissure', evidence_score: 0.88, valid: true },
+          },
+          {
+            id: 4,
+            timestamp: new Date(Date.now() - 300000).toISOString(),
+            function_name: 'issues.create',
+            duration_ms: 32.1,
+            status: 'SUCCESS',
+            details: { ward: 'Lawspet', category: 'ROADS', priority: 'HIGH' },
+          },
+        ];
+        try { localStorage.setItem('civitrack_dev_logs', JSON.stringify(storedLogs)); } catch { /* ignore */ }
+      }
+      return { logs: storedLogs };
+    }
+
+    // 25b. Developer Metrics
+    if (path === '/developer/metrics') {
+      const allIssues = getStoredIssues();
+      const allUsers = getStoredUsers();
+      const userCount = Object.keys(allUsers).length;
+      return {
+        database: {
+          status: 'MongoDB Atlas / Local Storage (Synced)',
+          collections: {
+            users: Math.max(userCount, 12),
+            issues: allIssues.length,
+            wards: 10,
+            stories: 8,
+            notifications: 24,
+          },
+        },
+        ml_pipeline: {
+          status: 'Loaded ✅',
+          categories: ['ROADS', 'WATER', 'WASTE', 'LIGHTING', 'PUBLIC_PROPERTY', 'AIR_QUALITY', 'OTHER'],
+        },
+        system: {
+          python_version: '3.11.9 (Vite Engine)',
+          platform: typeof navigator !== 'undefined' ? navigator.platform : 'Darwin x86_64',
+          cpu_percent: Math.floor(12 + Math.random() * 8),
+          memory_used_mb: Math.floor(340 + Math.random() * 40),
+          memory_total_mb: 2048,
+        },
+      };
+    }
+
+    // 25c. Developer ML Test
+    if (path === '/developer/test-ml' && method === 'post') {
+      const body = typeof config.data === 'string' ? JSON.parse(config.data || '{}') : (config.data || {});
+      const text = (body.text || '').toLowerCase();
+      let cat = 'ROADS';
+      let conf = 0.94;
+      if (text.includes('water') || text.includes('drain') || text.includes('pipe') || text.includes('leak') || text.includes('தண்ணீர்')) {
+        cat = 'WATER';
+        conf = 0.96;
+      } else if (text.includes('garbage') || text.includes('waste') || text.includes('trash') || text.includes('dump') || text.includes('குப்பை')) {
+        cat = 'WASTE';
+        conf = 0.95;
+      } else if (text.includes('light') || text.includes('lamp') || text.includes('dark') || text.includes('மின்')) {
+        cat = 'LIGHTING';
+        conf = 0.93;
+      } else if (text.includes('smoke') || text.includes('air') || text.includes('burn') || text.includes('pollution')) {
+        cat = 'AIR_QUALITY';
+        conf = 0.92;
+      }
+
+      return {
+        input: body.text || '',
+        result: {
+          category: cat,
+          confidence: conf,
+          model: 'TF-IDF + Random Forest Classifier (CiviTrack Ensemble)',
+        },
+        duration_ms: Math.round((8 + Math.random() * 15) * 10) / 10,
+      };
+    }
+
+    // 25d. Developer Priority Formula Test
+    if (path === '/developer/test-priority' && method === 'post') {
+      const body = typeof config.data === 'string' ? JSON.parse(config.data || '{}') : (config.data || {});
+      const loc_weights: Record<string, number> = {
+        HIGHWAY: 30, SCHOOL_HOSPITAL: 28, COMMERCIAL: 25, INDUSTRIAL: 20, RESIDENTIAL: 15, RURAL: 10,
+      };
+      const hec_weights: Record<string, number> = {
+        EXTREMELY_BUSY: 30, BUSY: 22, MODERATE: 15, LOW: 8, VERY_LOW: 3,
+      };
+      const loc_pts = loc_weights[body.area_type] || 15;
+      const hec_pts = hec_weights[body.hectic_level] || 15;
+      const img_pts = Math.round((Number(body.image_hazard_score) || 0.5) * 40 * 10) / 10;
+      const score = Math.min(100, Math.round(loc_pts + hec_pts + img_pts));
+      const priority = score <= 25 ? 'LOW' : score <= 50 ? 'MEDIUM' : score <= 75 ? 'HIGH' : 'CRITICAL';
+
+      return {
+        score,
+        priority,
+        breakdown: {
+          location_pts: loc_pts,
+          hectic_pts: hec_pts,
+          image_hazard_pts: img_pts,
+        },
+        duration_ms: Math.round((1 + Math.random() * 3) * 10) / 10,
+      };
+    }
+
+    // 25e. Developer Ping
+    if (path === '/developer/ping') {
+      return { status: 'ok', message: 'Developer diagnostics active', timestamp: Date.now() };
+    }
   }
 
   return null;

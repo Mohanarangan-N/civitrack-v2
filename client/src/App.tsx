@@ -41,10 +41,10 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <SocketInitializer />
-        <div className="min-h-screen bg-bg text-text-primary flex flex-col font-sans">
+        <div className="min-h-screen bg-bg text-text-primary flex flex-col font-sans w-full max-w-full overflow-x-hidden">
           <Navbar />
           
-          <main className="flex-1">
+          <main className="flex-1 w-full max-w-full overflow-x-hidden">
             <Routes>
               {/* Public & Guest Accessible Routes */}
               <Route path="/" element={<LandingPage />} />
@@ -111,15 +111,8 @@ export function App() {
                 }
               />
 
-              {/* Developer & System Health Route */}
-              <Route
-                path="/developer"
-                element={
-                  <ProtectedRoute requireAuth={true} allowedRoles={['AUTHORITY']} pageTitle="Developer Diagnostics & System Health">
-                    <DeveloperDashboard />
-                  </ProtectedRoute>
-                }
-              />
+              {/* Developer & System Health Route (Protected by developer passcode gate) */}
+              <Route path="/developer" element={<DeveloperDashboard />} />
             </Routes>
           </main>
 

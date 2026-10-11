@@ -9,7 +9,7 @@ from app.utils.helpers import now_utc, serialize_doc
 from app.utils.developer_logger import log_event
 from app.middleware.auth import get_current_user, get_optional_user, require_ngo, require_authority, require_citizen
 from app.services.ecoscore import award_points
-from app.services.notification import create_notification, emit_to_ward, emit_to_issue
+from app.services.notification import create_notification, emit_to_ward, emit_to_issue, notify_role
 from app.services.anonymous import generate_tracking_token, hash_token, verify_token
 
 router = APIRouter()
@@ -154,6 +154,12 @@ async def submit_issue(body: IssueCreate, current_user=Depends(get_current_user)
         "category": body.category.value,
         "ward": body.ward,
     })
+    await notify_role(
+        "NGO", "NEW_ISSUE_PENDING",
+        f"🚨 New Issue Reported in {body.ward}",
+        f"A citizen reported a {body.category.value} hazard: '{body.title}'. Field verification required.",
+        issue_id, ward=body.ward
+    )
 
     # Async ML classification
     asyncio.create_task(_classify_issue_async(issue_id, body.title, body.description,
@@ -314,10 +320,19 @@ async def verify_issue(issue_id: str, body: IssueVerify, current_user=Depends(re
         if issue.get("reporter_id"):
             await create_notification(
                 str(issue["reporter_id"]), "ISSUE_VERIFIED",
-                "Issue Verified ✅", f"Your report '{issue['title']}' has been verified and is now public!",
+                "Issue Verified ✅ (+25 EcoScore)",
+                f"Your report '{issue['title']}' has been verified by Ward NGO and sent to Municipal Authority for dispatch!",
                 issue_id
             )
             await award_points(str(issue["reporter_id"]), "NGO_VERIFIED")
+
+        # Notify Municipal Authority to take action!
+        await notify_role(
+            "AUTHORITY", "ACTION_REQUIRED",
+            f"🏛️ Action Required: Verified Issue in {issue.get('ward', 'Puducherry')}",
+            f"NGO verified {issue.get('category')}: '{issue['title']}'. Ready for Work Order dispatch.",
+            issue_id
+        )
 
         # Broadcast to feed
         from app.utils import socket_instance as si
@@ -369,8 +384,16 @@ async def update_status(issue_id: str, body: IssueStatusUpdate, current_user=Dep
 
     # Notify reporter
     if issue.get("reporter_id"):
-        msg = f"Your issue '{issue['title']}' status updated to {body.status.value}"
-        await create_notification(str(issue["reporter_id"]), "STATUS_CHANGE", "Issue Update", msg, issue_id)
+        if body.status.value == "RESOLVED":
+            title = "✅ Issue Resolved: Confirmation Required"
+            msg = f"Municipal crew has resolved your reported issue '{issue['title']}'. Please review and confirm resolution to earn +50 EcoScore pts!"
+        elif body.status.value == "IN_PROGRESS":
+            title = "🚜 Work Order Dispatched"
+            msg = f"Municipal Authority dispatched repair crew for '{issue['title']}'. Work is currently underway."
+        else:
+            title = "Issue Update"
+            msg = f"Your issue '{issue['title']}' status updated to {body.status.value}"
+        await create_notification(str(issue["reporter_id"]), "STATUS_CHANGE", title, msg, issue_id)
 
     await emit_to_issue(issue_id, "issue:statusChange", {"issue_id": issue_id, "status": body.status.value})
     return {"success": True, "new_status": body.status.value}
@@ -392,6 +415,20 @@ async def citizen_verify_resolved(issue_id: str, current_user=Depends(get_curren
         {"$set": {"citizen_verified_resolved": True, "updated_at": now_utc()}}
     )
     await award_points(str(current_user["_id"]), "ISSUE_RESOLVED")
+
+    # Notify Authority and NGO that citizen confirmed completion
+    await notify_role(
+        "AUTHORITY", "RESOLUTION_CONFIRMED",
+        "🌟 Citizen Confirmed Resolution (+50 Pts)",
+        f"Resident confirmed that repair for '{issue['title']}' in {issue.get('ward')} was completed satisfactorily.",
+        issue_id
+    )
+    await notify_role(
+        "NGO", "RESOLUTION_CONFIRMED",
+        "🌟 Citizen Confirmed Resolution (+50 Pts)",
+        f"Resident confirmed that repair for '{issue['title']}' in {issue.get('ward')} was completed satisfactorily.",
+        issue_id, ward=issue.get("ward")
+    )
     return {"success": True, "message": "Resolution confirmed. EcoScore +50 awarded!"}
 
 

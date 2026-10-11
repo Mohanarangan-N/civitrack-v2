@@ -87,17 +87,17 @@ export const IssueDetailPage: React.FC = () => {
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
       
       {/* Top Banner Card */}
-      <div className="card p-6 border-primary/30 shadow-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-primary/10 pb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-3xl">{category.emoji}</span>
-            <div>
-              <span className="text-xs font-bold text-accent uppercase block">{category.label}</span>
-              <h1 className="text-xl font-extrabold text-text-primary">{issue.title}</h1>
+      <div className="card p-4 sm:p-6 border-primary/30 shadow-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-primary/10 pb-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-3xl shrink-0">{category.emoji}</span>
+            <div className="min-w-0">
+              <span className="text-xs font-bold text-accent uppercase tracking-wider block">{category.label}</span>
+              <h1 className="text-lg sm:text-xl font-extrabold text-text-primary break-words">{issue.title}</h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
             <span className={status.className}>{status.label}</span>
             <span
               className="badge font-bold"
@@ -184,14 +184,16 @@ export const IssueDetailPage: React.FC = () => {
 
         {/* Citizen Mandatory Resolution Confirmation */}
         {issue.status === 'RESOLVED' && !issue.citizen_verified_resolved && isReporter && (
-          <div className="p-4 rounded-xl bg-accent/20 border-2 border-accent/60 flex items-center justify-between gap-4">
-            <div>
-              <h4 className="font-bold text-sm text-accent">Mandatory Resolution Confirmation Required</h4>
-              <p className="text-xs text-text-muted">
+          <div className="p-4 sm:p-5 rounded-2xl bg-accent/20 border-2 border-accent/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+            <div className="space-y-1">
+              <h4 className="font-extrabold text-sm text-accent flex items-center gap-1.5">
+                <CheckCircle2 size={16} /> Mandatory Resolution Confirmation Required
+              </h4>
+              <p className="text-xs text-text-secondary leading-relaxed">
                 Authorities marked this issue as resolved. Please confirm the work was done to earn +50 EcoScore pts!
               </p>
             </div>
-            <Button onClick={handleCitizenConfirmResolved} className="shadow-lg shadow-accent/30 flex-shrink-0">
+            <Button onClick={handleCitizenConfirmResolved} className="w-full sm:w-auto shadow-lg shadow-accent/30 shrink-0 font-bold justify-center">
               Confirm Resolution (+50 Pts)
             </Button>
           </div>

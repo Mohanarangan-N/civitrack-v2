@@ -15,9 +15,9 @@ export const MobileNav: React.FC = () => {
   const navItems = [
     { to: '/feed', icon: Home, label: 'Feed' },
     { to: '/map', icon: MapPin, label: 'Map' },
-    { to: isNGO ? '/ngo' : isAuthority ? '/authority' : '/leaderboard', icon: Award, label: 'CenterSlot' },
+    { to: isNGO ? '/ngo' : isAuthority ? '/authority' : '/report', icon: Award, label: isNGO ? 'Verify' : isAuthority ? 'DSS' : 'Report' },
     { to: '/notifications', icon: Bell, label: 'Alerts', badge: unreadNotifications },
-    { to: isAuthenticated ? `/profile/${user?.id}` : '/login', icon: User, label: 'Me' },
+    { to: isAuthenticated ? (user?.id ? `/profile/${user.id}` : '/profile') : '/login', icon: User, label: 'Profile' },
   ];
 
   // Hide on auth pages
@@ -31,11 +31,11 @@ export const MobileNav: React.FC = () => {
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50">
         {/* Glassmorphism bar */}
-        <div className="relative mx-3 mb-3 bg-bg-surface/85 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl shadow-black/50 overflow-hidden">
+        <div className="relative mx-3 mb-3 bg-bg-surface/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl shadow-black/50 overflow-hidden">
           {/* Subtle top glow line */}
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
 
-          <div className="flex items-center px-2 py-2">
+          <div className="flex items-center px-2 py-1.5">
             {navItems.map(({ to, icon: Icon, label, badge }, idx) => {
               const isMid = idx === 2; // center slot — role-specific action button
               const isActive = location.pathname === to || (to.startsWith('/profile') && location.pathname.startsWith('/profile'));
@@ -44,32 +44,34 @@ export const MobileNav: React.FC = () => {
                 // Central elevated Role FAB
                 if (isNGO) {
                   return (
-                    <div key="fab-ngo" className="flex-1 flex justify-center -mt-6">
+                    <div key="fab-ngo" className="flex-1 flex flex-col items-center justify-center -mt-6">
                       <Link to="/ngo" className="group relative" title="NGO Verification Hub">
                         <div className="absolute inset-0 rounded-full bg-warning blur-md opacity-60 group-hover:opacity-90 transition-opacity scale-110" />
                         <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-xl shadow-amber-500/40 group-hover:scale-110 group-active:scale-95 transition-transform duration-200">
                           <span className="text-xl">🛡️</span>
                         </div>
                       </Link>
+                      <span className="text-[9px] font-extrabold text-warning mt-1">Verify</span>
                     </div>
                   );
                 }
 
                 if (isAuthority) {
                   return (
-                    <div key="fab-auth" className="flex-1 flex justify-center -mt-6">
+                    <div key="fab-auth" className="flex-1 flex flex-col items-center justify-center -mt-6">
                       <Link to="/authority" className="group relative" title="Municipal DSS">
                         <div className="absolute inset-0 rounded-full bg-accent blur-md opacity-60 group-hover:opacity-90 transition-opacity scale-110" />
                         <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-accent to-emerald-600 flex items-center justify-center shadow-xl shadow-accent/40 group-hover:scale-110 group-active:scale-95 transition-transform duration-200">
                           <span className="text-xl">🏛️</span>
                         </div>
                       </Link>
+                      <span className="text-[9px] font-extrabold text-accent mt-1">DSS</span>
                     </div>
                   );
                 }
 
                 return (
-                  <div key="fab-citizen" className="flex-1 flex justify-center -mt-6">
+                  <div key="fab-citizen" className="flex-1 flex flex-col items-center justify-center -mt-6">
                     <Link
                       to={isAuthenticated ? '/report' : '/login'}
                       className="group relative"
@@ -84,6 +86,7 @@ export const MobileNav: React.FC = () => {
                         </svg>
                       </div>
                     </Link>
+                    <span className="text-[9px] font-extrabold text-accent mt-1">Report</span>
                   </div>
                 );
               }
