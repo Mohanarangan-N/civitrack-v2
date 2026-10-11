@@ -23,23 +23,6 @@ const api = axios.create({
   baseURL,
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
-  adapter: isVercelOrStandalone
-    ? async (config) => {
-        const mockData = handleMockRequest(config);
-        if (mockData !== null) {
-          // Subtle realistic latency
-          await new Promise((r) => setTimeout(r, 60));
-          return {
-            data: mockData,
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config,
-          };
-        }
-        return (axios.defaults.adapter as any)(config);
-      }
-    : undefined,
 });
 
 // Request interceptor: inject JWT
