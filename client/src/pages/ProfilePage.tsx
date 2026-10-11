@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usersAPI } from '@/api';
 import type { User, Issue } from '@/types';
 import { EcoScoreWidget } from '@/components/gamification/EcoScoreWidget';
 import { BadgeCard } from '@/components/gamification/BadgeCard';
 import { PostCard } from '@/components/feed/PostCard';
 import { ACHIEVEMENT_CONFIG } from '@/utils/constants';
-import { User as UserIcon, Shield, Award, Calendar, MapPin } from 'lucide-react';
+import { User as UserIcon, Shield, Award, Calendar, MapPin, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import toast from 'react-hot-toast';
 
 export const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser, logout } = useAuthStore();
   const userId = id || currentUser?.id;
   const isOwnProfile = !id || (!!currentUser && id === currentUser.id);
 
@@ -141,6 +143,17 @@ export const ProfilePage: React.FC = () => {
                   <span>+ Report New Issue →</span>
                 </Link>
               )}
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                  toast.success('Signed out successfully');
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 text-xs font-bold transition-all"
+              >
+                <LogOut size={14} />
+                <span>Sign Out</span>
+              </button>
             </div>
           )}
         </div>

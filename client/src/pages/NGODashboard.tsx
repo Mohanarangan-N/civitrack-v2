@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ngoAPI, issuesAPI } from '@/api';
 import type { Issue } from '@/types';
 import { CATEGORY_CONFIG, PRIORITY_CONFIG } from '@/utils/constants';
-import { Check, X, AlertTriangle, Shield, Sparkles, MapPin } from 'lucide-react';
+import { Check, X, AlertTriangle, Shield, Sparkles, MapPin, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 
 export const NGODashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [pendingIssues, setPendingIssues] = useState<Issue[]>([]);
   const [stats, setStats] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -82,8 +84,8 @@ export const NGODashboard: React.FC = () => {
           </p>
         </div>
 
-        {/* Stats Pills */}
-        <div className="flex items-center gap-3 text-xs">
+        {/* Stats & Actions */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <div className="bg-bg-elevated px-3 py-2 rounded-xl border border-primary/20">
             <span className="text-text-muted block">Pending Verification</span>
             <span className="text-lg font-bold text-warning">{pendingIssues.length}</span>
@@ -92,6 +94,23 @@ export const NGODashboard: React.FC = () => {
             <span className="text-text-muted block">Verified Issues</span>
             <span className="text-lg font-bold text-accent">{stats.VERIFIED || 0}</span>
           </div>
+          <Link to="/feed">
+            <Button variant="ghost" size="sm" className="text-xs font-semibold text-text-secondary hover:text-text-primary border border-primary/20">
+              Public Feed →
+            </Button>
+          </Link>
+          <Button
+            onClick={() => {
+              useAuthStore.getState().logout();
+              navigate('/login');
+              toast.success('Signed out successfully');
+            }}
+            variant="ghost"
+            size="sm"
+            className="text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30"
+          >
+            <LogOut size={14} /> Switch / Logout
+          </Button>
         </div>
       </div>
 

@@ -113,28 +113,30 @@ export const LandingPage: React.FC = () => {
           {/* CTA Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
             {isAuthenticated ? (
-              user?.role === 'AUTHORITY' ? (
-                <Link to="/authority">
-                  <Button size="lg" className="px-8 shadow-xl shadow-accent/25 group bg-accent hover:bg-accent/80 text-white font-bold">
-                    Go to Authority Command DSS
-                    <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-              ) : user?.role === 'NGO' ? (
-                <Link to="/ngo">
-                  <Button size="lg" className="px-8 shadow-xl shadow-warning/25 group bg-warning hover:bg-warning/80 text-black font-bold">
-                    Go to NGO Verification Hub
-                    <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-              ) : (
+              <>
+                {user?.role === 'AUTHORITY' && (
+                  <Link to="/authority">
+                    <Button size="lg" className="px-8 shadow-xl shadow-accent/25 group bg-accent hover:bg-accent/80 text-white font-bold">
+                      Authority Command DSS
+                      <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                )}
+                {user?.role === 'NGO' && (
+                  <Link to="/ngo">
+                    <Button size="lg" className="px-8 shadow-xl shadow-warning/25 group bg-warning hover:bg-warning/80 text-black font-bold">
+                      NGO Verification Hub
+                      <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/feed">
-                  <Button size="lg" className="px-8 shadow-xl shadow-accent/25 group">
+                  <Button size="lg" variant={user?.role === 'CITIZEN' ? 'default' : 'secondary'} className="px-8 shadow-xl">
                     Explore Citizen Feed
                     <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-              )
+              </>
             ) : (
               <Link to="/register">
                 <Button size="lg" className="px-8 shadow-xl shadow-accent/25 group">
@@ -150,6 +152,20 @@ export const LandingPage: React.FC = () => {
               </Button>
             </Link>
           </div>
+
+          {/* Quick Sign Out / Role Switch Helper when Authenticated */}
+          {isAuthenticated && (
+            <div className="mt-4 animate-fade-in flex items-center justify-center gap-2 text-xs text-text-muted">
+              <span>Signed in as <strong className="text-text-primary">{user?.name}</strong> ({user?.role})</span>
+              <span>•</span>
+              <button
+                onClick={() => useAuthStore.getState().logout()}
+                className="text-rose-400 hover:underline font-bold"
+              >
+                Sign out / Switch user
+              </button>
+            </div>
+          )}
 
           {/* Animated Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-16">

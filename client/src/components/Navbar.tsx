@@ -45,98 +45,77 @@ export const Navbar: React.FC = () => {
         </Link>
 
         {/* Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1 min-w-0">
           {/* Role-Specific Primary Home Link */}
           {user?.role === 'NGO' ? (
             <Link
               to="/ngo"
-              className={`nav-link font-bold text-warning border border-warning/30 bg-warning/10 hover:bg-warning/20 rounded-xl px-3 py-1.5 flex items-center gap-1.5 ${
+              className={`nav-link text-xs font-bold text-warning border border-warning/30 bg-warning/10 hover:bg-warning/20 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 shrink-0 ${
                 location.pathname === '/ngo' ? 'ring-2 ring-warning/50 bg-warning/20' : ''
               }`}
             >
-              <Shield size={16} className="text-warning" />
-              <span>NGO Verification Hub</span>
+              <Shield size={15} className="text-warning" />
+              <span>NGO Hub</span>
             </Link>
           ) : user?.role === 'AUTHORITY' ? (
             <Link
               to="/authority"
-              className={`nav-link font-bold text-accent border border-accent/30 bg-accent/10 hover:bg-accent/20 rounded-xl px-3 py-1.5 flex items-center gap-1.5 ${
+              className={`nav-link text-xs font-bold text-accent border border-accent/30 bg-accent/10 hover:bg-accent/20 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 shrink-0 ${
                 location.pathname === '/authority' ? 'ring-2 ring-accent/50 bg-accent/20' : ''
               }`}
             >
-              <LayoutDashboard size={16} className="text-accent" />
-              <span>Authority DSS Command</span>
+              <LayoutDashboard size={15} className="text-accent" />
+              <span>Authority DSS</span>
             </Link>
           ) : null}
 
-          <Link to="/feed" className={`nav-link ${location.pathname === '/feed' ? 'active' : ''}`}>
+          <Link to="/feed" className={`nav-link text-xs ${location.pathname === '/feed' ? 'active' : ''}`}>
             {t('nav.feed')}
           </Link>
-          <Link to="/map" className={`nav-link ${location.pathname === '/map' ? 'active' : ''}`}>
-            <MapPin size={16} />
+          <Link to="/map" className={`nav-link text-xs ${location.pathname === '/map' ? 'active' : ''}`}>
+            <MapPin size={15} />
             {t('nav.map')}
           </Link>
-          <Link to="/leaderboard" className={`nav-link ${location.pathname === '/leaderboard' ? 'active' : ''}`}>
-            <Award size={16} />
+          <Link to="/leaderboard" className={`nav-link text-xs ${location.pathname === '/leaderboard' ? 'active' : ''}`}>
+            <Award size={15} />
             {t('nav.leaderboard')}
           </Link>
-          <Link to="/track" className={`nav-link ${location.pathname === '/track' ? 'active' : ''}`}>
-            <Search size={16} />
+          <Link to="/track" className={`nav-link text-xs ${location.pathname === '/track' ? 'active' : ''}`}>
+            <Search size={15} />
             Track
           </Link>
-          <Link to="/ai" className={`nav-link text-accent hover:text-accent-hover font-semibold flex items-center gap-1.5 ${location.pathname === '/ai' ? 'active' : ''}`}>
-            <Sparkles size={16} className="text-accent animate-pulse" />
-            AI Engine
+          <Link to="/ai" className={`nav-link text-xs text-accent hover:text-accent-hover font-semibold hidden xl:flex items-center gap-1 ${location.pathname === '/ai' ? 'active' : ''}`}>
+            <Sparkles size={14} className="text-accent animate-pulse" />
+            AI
           </Link>
 
-          <Link to="/developer" className={`nav-link text-xs font-mono text-text-muted hover:text-accent flex items-center gap-1 ${location.pathname === '/developer' ? 'active text-accent' : ''}`}>
+          <Link to="/developer" className={`nav-link text-xs font-mono text-text-muted hover:text-accent hidden 2xl:flex items-center gap-1 ${location.pathname === '/developer' ? 'active text-accent' : ''}`}>
             <Terminal size={14} />
-            Diagnostics
+            Dev
           </Link>
         </nav>
 
         {/* Right Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
           
-          {/* Report Button (For Citizens and General Use) */}
+          {/* Report Button (For Citizens) */}
           {isAuthenticated && user?.role === 'CITIZEN' && (
             <Link
               to="/report"
-              className="hidden sm:inline-flex items-center gap-2 bg-accent hover:bg-primary-light text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all shadow-md shadow-accent/20 active:scale-95"
+              className="inline-flex items-center gap-1.5 bg-accent hover:bg-primary-light text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all shadow-md shadow-accent/20 active:scale-95 shrink-0"
             >
-              <PlusCircle size={18} />
-              <span>{t('nav.report')}</span>
-            </Link>
-          )}
-
-          {/* Quick Action for NGO / Authority */}
-          {isAuthenticated && user?.role === 'NGO' && (
-            <Link
-              to="/ngo"
-              className="hidden sm:inline-flex items-center gap-1.5 bg-warning/20 border border-warning/40 text-warning hover:bg-warning/30 text-xs font-bold px-3 py-2 rounded-lg transition-all"
-            >
-              <Shield size={15} />
-              <span>Verify Issues</span>
-            </Link>
-          )}
-
-          {isAuthenticated && user?.role === 'AUTHORITY' && (
-            <Link
-              to="/authority"
-              className="hidden sm:inline-flex items-center gap-1.5 bg-accent/20 border border-accent/40 text-accent hover:bg-accent/30 text-xs font-bold px-3 py-2 rounded-lg transition-all"
-            >
-              <LayoutDashboard size={15} />
-              <span>DSS Overview</span>
+              <PlusCircle size={15} />
+              <span className="hidden sm:inline">{t('nav.report')}</span>
             </Link>
           )}
 
           {/* Desktop Language Toggle */}
-          <div className="hidden sm:flex items-center bg-bg-elevated border border-primary/30 rounded-lg p-0.5 text-xs font-semibold">
+          <div className="hidden sm:flex items-center bg-bg-elevated border border-primary/30 rounded-lg p-0.5 text-[11px] font-semibold shrink-0">
             {(['en', 'ta', 'fr'] as const).map((lang) => (
               <button
                 key={lang}
                 onClick={() => handleLanguageChange(lang)}
-                className={`px-2 py-1 rounded transition-colors uppercase ${
+                className={`px-1.5 py-0.5 rounded transition-colors uppercase ${
                   language === lang
                     ? 'bg-accent text-white shadow'
                     : 'text-text-muted hover:text-text-primary'
@@ -153,7 +132,7 @@ export const Navbar: React.FC = () => {
               const nextLang = language === 'en' ? 'ta' : language === 'ta' ? 'fr' : 'en';
               handleLanguageChange(nextLang);
             }}
-            className="sm:hidden flex items-center gap-1 bg-bg-elevated border border-primary/30 rounded-lg px-2 py-1 text-[11px] font-bold text-accent uppercase"
+            className="sm:hidden flex items-center gap-1 bg-bg-elevated border border-primary/30 rounded-lg px-2 py-1 text-[11px] font-bold text-accent uppercase shrink-0"
             title="Switch Language"
           >
             <Globe size={12} />
@@ -162,17 +141,17 @@ export const Navbar: React.FC = () => {
 
           {/* User Auth Section */}
           {isAuthenticated ? (
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               
               {/* Notification Icon */}
               <Link
                 to="/notifications"
-                className="relative p-1.5 sm:p-2 text-text-secondary hover:text-text-primary hover:bg-primary/20 rounded-lg transition-colors"
+                className="relative p-1.5 text-text-secondary hover:text-text-primary hover:bg-primary/20 rounded-lg transition-colors shrink-0"
                 title={t('nav.notifications')}
               >
-                <Bell size={18} className="sm:w-5 sm:h-5" />
+                <Bell size={18} />
                 {unreadNotifications > 0 && (
-                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-danger text-white text-[9px] sm:text-[10px] font-bold flex items-center justify-center animate-pulse">
+                  <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-danger text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
                     {unreadNotifications > 9 ? '9+' : unreadNotifications}
                   </span>
                 )}
@@ -181,9 +160,10 @@ export const Navbar: React.FC = () => {
               {/* Profile Link with Role-Coded Badge */}
               <Link
                 to={user?.id ? `/profile/${user.id}` : '/profile'}
-                className="flex items-center gap-2 p-1 sm:p-1.5 rounded-lg hover:bg-primary/20 transition-colors"
+                className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-primary/20 transition-colors shrink-0"
+                title={`${user?.name} (${user?.role})`}
               >
-                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border flex items-center justify-center font-bold text-xs sm:text-sm ${
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border flex items-center justify-center font-bold text-xs ${
                   user?.role === 'AUTHORITY' 
                     ? 'bg-accent/20 border-accent/50 text-accent' 
                     : user?.role === 'NGO'
@@ -192,9 +172,9 @@ export const Navbar: React.FC = () => {
                 }`}>
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
-                <div className="hidden lg:block text-left text-xs">
-                  <span className="block font-semibold text-text-primary truncate max-w-[110px]">{user?.name}</span>
-                  <span className={`block text-[10px] font-extrabold uppercase ${
+                <div className="hidden xl:block text-left text-xs max-w-[90px]">
+                  <span className="block font-semibold text-text-primary truncate">{user?.name}</span>
+                  <span className={`block text-[9px] font-extrabold uppercase ${
                     user?.role === 'AUTHORITY' ? 'text-accent' : user?.role === 'NGO' ? 'text-warning' : 'text-text-muted'
                   }`}>
                     {user?.role}
@@ -202,26 +182,27 @@ export const Navbar: React.FC = () => {
                 </div>
               </Link>
 
-              {/* Logout Button */}
+              {/* Explicit, Unmissable Logout Button */}
               <button
                 onClick={handleLogout}
-                className="p-1.5 sm:p-2 text-text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
-                title={t('nav.logout')}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-rose-400 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 rounded-xl transition-all shadow-sm shrink-0 active:scale-95"
+                title="Sign out of account"
               >
-                <LogOut size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <LogOut size={14} className="text-rose-400" />
+                <span className="text-[11px] font-bold">Logout</span>
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <Link
                 to="/login"
-                className="text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors"
+                className="text-xs font-semibold text-text-secondary hover:text-text-primary px-2.5 py-1.5 rounded-lg transition-colors"
               >
                 {t('nav.login')}
               </Link>
               <Link
                 to="/register"
-                className="bg-accent hover:bg-primary-light text-white text-xs sm:text-sm font-semibold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all shadow-md shadow-accent/20"
+                className="bg-accent hover:bg-primary-light text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all shadow-md shadow-accent/20"
               >
                 {t('nav.register')}
               </Link>

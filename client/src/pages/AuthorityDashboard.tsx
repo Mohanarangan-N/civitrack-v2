@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { analyticsAPI, issuesAPI } from '@/api';
 import type { AnalyticsSummary, MonthlyData, CategoryData, WardData, SLAItem, Issue } from '@/types';
 import { KPICard } from '@/components/dashboard/KPICard';
@@ -12,14 +12,17 @@ import {
 import { 
   Shield, Download, CheckCircle, Clock, AlertTriangle, Activity, 
   FileSpreadsheet, TrendingDown, Zap, Target, CheckCircle2, Sparkles,
-  Truck, Wrench, ExternalLink, MapPin
+  Truck, Wrench, ExternalLink, MapPin, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 
 const COLORS = ['#22A66A', '#3B9ED4', '#E8901A', '#E8D61A', '#9B59B6', '#1ABC9C', '#E85038', '#95A5A6'];
 
 export const AuthorityDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { logout, user } = useAuthStore();
   const [actionIssues, setActionIssues] = useState<Issue[]>([]);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [summary, setSummary] = useState<AnalyticsSummary | null>({
@@ -213,12 +216,29 @@ ACTION ROADMAP BY DOMAIN:
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button onClick={handleDownloadPreventionPlan} variant="secondary" size="sm" className="text-xs font-bold border-accent/40 text-accent">
             <Sparkles size={14} /> AI Prevention Plan
           </Button>
           <Button onClick={handleExportCSV} size="sm" className="text-xs font-bold shadow-lg shadow-accent/20">
             <FileSpreadsheet size={14} /> Export SLA CSV
+          </Button>
+          <Link to="/feed">
+            <Button variant="ghost" size="sm" className="text-xs font-semibold text-text-secondary hover:text-text-primary border border-primary/20">
+              Public Feed →
+            </Button>
+          </Link>
+          <Button
+            onClick={() => {
+              logout();
+              navigate('/login');
+              toast.success('Signed out successfully');
+            }}
+            variant="ghost"
+            size="sm"
+            className="text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30"
+          >
+            <LogOut size={14} /> Switch / Logout
           </Button>
         </div>
       </div>
